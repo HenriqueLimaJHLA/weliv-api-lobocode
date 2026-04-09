@@ -1,0 +1,9 @@
+export { IsCPF } from './cpf.validator';
+export { IsCNPJ } from './cnpj.validator';
+export { IsPhoneNumberBR } from './phone-br.validator';
+export { IsStrongPassword } from './strong-password.validator';
+export { IsUniqueLogin } from './unique-login.validator';
+export { IsUniqueEmail } from './unique-email.validator';
+export { IsUniqueCPF } from './unique-cpf.validator';
+export { IsCUID } from './is-cuid.validator';
+export { IsExpectedRole } from './is-expected-role.validator'; 

@@ -1,0 +1,104 @@
+services:
+
+  # Backend NestJS
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.prod
+    container_name: weliv-backend
+    env_file:
+      - .env
+    ports:
+      - '30100:3000'  # weliv: bloco 30xxx
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-password123}
+      - MINIO_USE_SSL=false
+      - MINIO_ENDPOINT=https://api.weliv.com.br/files
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.2'
+    networks:
+      - app-net-weliv
+
+  # Database PostgreSQL (usar rede externa)
+  db:
+    image: postgres:16.8-alpine3.20
+    container_name: weliv-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+    ports:
+      - '15432:5432'  # weliv: bloco 15xxx  # weliv: evita conflito com weliv (5432)
+    volumes:
+      - weliv-api-lobocode_postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+      - ./postgres-entrypoint.sh:/usr/local/bin/postgres-entrypoint.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/postgres-entrypoint.sh"]
+    healthcheck:
+      # Só fica healthy DEPOIS do entrypoint sincronizar a senha (evita backend conectar com senha errada)
+      test: ['CMD-SHELL', 'test -f /tmp/postgres-entrypoint-done && pg_isready -U postgres']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+    networks:
+      - app-net-weliv
+
+  # Redis Cache (usar rede externa)
+  redis:
+    image: redis:7-alpine
+    container_name: weliv-redis
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+        reservations:
+          memory: 64M
+          cpus: '0.05'
+    networks:
+      - app-net-weliv
+
+volumes:
+  weliv-api-lobocode_postgres_data:
+    external: true
+  redis_data:
+
+networks:
+  app-net-weliv:
+    external: true
+
+

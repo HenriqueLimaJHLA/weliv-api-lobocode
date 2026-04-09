@@ -1,0 +1,298 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Roles {
+  SYSTEM_ADMIN
+  ADMIN
+  PATIENT
+  PROFESSIONAL
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  BLOCKED
+}
+
+enum FileType {
+  PROFILE_IMAGE
+  DOCUMENT
+  REPORT
+  VIDEO
+  AUDIO
+  OTHER
+}
+
+enum DocumentRecipientType {
+  HR
+  SUPERVISOR
+  ADMIN
+}
+
+enum DocumentStatus {
+  PENDING
+  VIEWED
+  DOWNLOADED
+}
+
+enum NotificationGroupType {
+  ROLE
+  SECTOR
+  CUSTOM
+}
+
+enum NotificationTargetType {
+  USER
+  ROLE
+  GROUP
+  COMPANY
+  CUSTOM
+}
+
+// Empresas Model
+model Company {
+  id   String @id @default(uuid())
+  name String
+
+  users     User[]
+  documents Document[] @relation("CompanyDocuments")
+  files     File[]     @relation("CompanyFiles")
+  notifications      Notification[] @relation("CompanyNotifications")
+  notificationGroups NotificationGroup[] @relation("CompanyNotificationGroups")
+ 
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+
+  @@index([id])
+  @@index([name])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Usuários Model
+model User {
+  id       String @id @default(uuid())
+  name     String
+  login    String @unique
+  email    String @unique
+  cpf      String @unique
+  password String
+  role     Roles
+  status   UserStatus @default(PENDING)
+
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
+  documents Document[] @relation("DocumentSender")
+  files     File[]     @relation("UserFiles")
+  pushSubscriptions        PushSubscription[] @relation("UserPushSubscriptions")
+  notificationGroupMembers NotificationGroupMember[] @relation("UserGroupMemberships")
+  notificationRecipients   NotificationRecipient[] @relation("UserNotifications")
+
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  deletedAt                DateTime?
+
+  @@index([companyId])
+  @@index([id])
+  @@index([email])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+// Arquivos Model
+model File {
+  id           String   @id @default(cuid())
+  originalName String
+  fileName     String   @unique
+  type         FileType
+  size         Int
+  mimeType     String
+  url          String   @unique
+  description  String?
+
+  companyId      String?
+  company        Company?  @relation("CompanyFiles", fields: [companyId], references: [id])
+  uploadedBy     String?
+  uploadedByUser User?     @relation("UserFiles", fields: [uploadedBy], references: [id])
+  document       Document? @relation("DocumentFile")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([uploadedBy])
+  @@index([type])
+  @@index([fileName])
+  @@index([url])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+// Documentos Model
+model Document {
+  id            String                @id @default(cuid())
+  recipientType DocumentRecipientType
+  description   String?
+  status        DocumentStatus        @default(PENDING)
+
+  fileId    String   @unique
+  file      File     @relation("DocumentFile", fields: [fileId], references: [id])
+  userId    String
+  user      User     @relation("DocumentSender", fields: [userId], references: [id])
+  companyId String?
+  company   Company? @relation("CompanyDocuments", fields: [companyId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([recipientType])
+  @@index([status])
+  @@index([companyId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+// Notificações Model
+model Notification {
+  id         String  @id @default(cuid())
+  title      String
+  message    String
+  entityType String?
+  entityId   String?
+
+  companyId       String?
+  company         Company? @relation("CompanyNotifications", fields: [companyId], references: [id])
+  createdByUserId String?
+
+  recipients NotificationRecipient[] @relation("NotificationRecipients")
+  targets    NotificationTarget[]    @relation("NotificationTargets")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+// Notificações Recipientes Model
+model NotificationRecipient {
+  id     String    @id @default(cuid())
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  notificationId String
+  notification   Notification @relation("NotificationRecipients", fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([notificationId, userId])
+  @@index([userId])
+  @@index([notificationId])
+  @@index([isRead])
+  @@index([readAt])
+}
+
+// Notificações Grupos Model
+model NotificationGroup {
+  id           String                @id @default(cuid())
+  name         String
+  description  String?
+  type         NotificationGroupType
+  isActive     Boolean               @default(true)
+  roleFilter   Roles?
+  sectorFilter String?
+
+  companyId     String
+  company       Company                   @relation("CompanyNotificationGroups", fields: [companyId], references: [id])
+  members       NotificationGroupMember[] @relation("GroupMembers")
+  notifications NotificationTarget[]      @relation("GroupNotifications")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([companyId])
+  @@index([type])
+  @@index([isActive])
+  @@index([roleFilter])
+  @@index([deletedAt])
+}
+
+// Notificações Grupos Membros Model
+model NotificationGroupMember {
+  id      String            @id @default(cuid())
+  groupId String
+  group   NotificationGroup @relation("GroupMembers", fields: [groupId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User              @relation("UserGroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  addedBy   String?
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+// Notificações Alvos Model
+model NotificationTarget {
+  id      String                 @id @default(cuid())
+  type    NotificationTargetType
+  userId  String?
+  roleId  Roles?
+  groupId String?
+
+  notificationId String
+  notification   Notification       @relation("NotificationTargets", fields: [notificationId], references: [id], onDelete: Cascade)
+  targetGroup    NotificationGroup? @relation("GroupNotifications", fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([notificationId])
+  @@index([type])
+  @@index([userId])
+  @@index([roleId])
+  @@index([groupId])
+}
+
+// Push Subscriptions Model
+model PushSubscription {
+  id       String @id @default(cuid())
+  endpoint String @unique
+  p256dh   String
+  auth     String
+  userId   String
+  user     User   @relation("UserPushSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([endpoint])
+}

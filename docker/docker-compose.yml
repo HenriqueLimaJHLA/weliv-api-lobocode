@@ -1,0 +1,171 @@
+services:
+  # Backend NestJS
+  # backend:
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: weliv-backend
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://postgres:root@db:5432/mydb
+  #     - JWT_SECRET=dev-secret-key
+  #     - REDIS_URL=redis://redis:6379
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_started
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1G
+  #         cpus: '0.5'
+  #       reservations:
+  #         memory: 512M
+  #         cpus: '0.2'
+  #   restart: unless-stopped
+  # Database PostgreSQL
+  
+  db:
+    image: postgres:16.8-alpine3.20
+    container_name: weliv-db
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+    ports:
+      - '15432:5432'  # weliv: bloco 15xxx
+    volumes:
+      - weliv-api-lobocode_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.2'
+    restart: unless-stopped
+    networks:
+      - app-net-weliv
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: weliv-redis
+    ports:
+      - '16379:6379'  # weliv: bloco 16xxx
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    restart: unless-stopped
+    networks:
+      - app-net-weliv
+
+  # MinIO - Armazenamento de Arquivos
+  minio:
+    image: minio/minio:latest
+    container_name: weliv-minio
+    ports:
+      - '19000:9000'  # weliv: bloco 19xxx
+      - '19001:9001'  # weliv: bloco 19xxx
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+    restart: unless-stopped
+    networks:
+      - app-net-weliv
+
+  # # Prometheus Monitoring
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: weliv-prometheus
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus_data:/prometheus
+  #   ports:
+  #     - '9090:9090'
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
+  #     - '--web.console.templates=/etc/prometheus/consoles'
+  #     - '--storage.tsdb.retention.time=200h'
+  #     - '--web.enable-lifecycle'
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 512M
+  #         cpus: '0.3'
+  #       reservations:
+  #         memory: 256M
+  #         cpus: '0.1'
+  #   restart: unless-stopped
+
+  # # Grafana Dashboard
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: weliv-grafana
+  #   ports:
+  #     - '3001:3000'
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./grafana/provisioning:/etc/grafana/provisioning
+  #   depends_on:
+  #     - prometheus
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 512M
+  #         cpus: '0.3'
+  #       reservations:
+  #         memory: 256M
+  #         cpus: '0.1'
+  #   restart: unless-stopped
+
+volumes:
+  weliv-api-lobocode_postgres_data:
+    external: true
+  redis_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  app-net-weliv:
+    external: true
+    driver: bridge 

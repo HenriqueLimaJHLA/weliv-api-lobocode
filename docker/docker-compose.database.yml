@@ -1,0 +1,65 @@
+services:
+  # Database PostgreSQL
+  db:
+    image: postgres:16.8-alpine3.20
+    container_name: weliv-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+    ports:
+      - '15432:5432'  # weliv: bloco 15xxx
+    volumes:
+      - weliv-api-lobocode_postgres_data:/var/lib/postgresql/data
+      - ./postgres-entrypoint.sh:/usr/local/bin/postgres-entrypoint.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/postgres-entrypoint.sh"]
+    healthcheck:
+      # Só fica healthy DEPOIS do entrypoint sincronizar a senha (evita backend conectar com senha errada)
+      test: ['CMD-SHELL', 'test -f /tmp/postgres-entrypoint-done && pg_isready -U ${DB_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    # Recursos para ~50 usuários e bastante requisição diária (ajuste conforme monitoramento)
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    restart: unless-stopped
+    networks:
+      - app-net-weliv
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: weliv-redis
+    ports:
+      - '16379:6379'  # weliv: bloco 16xxx
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:  
+        limits:
+          memory: 256M
+          cpus: '0.2'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    restart: unless-stopped
+    networks:
+      - app-net-weliv
+
+volumes:
+  weliv-api-lobocode_postgres_data:
+    external: true
+  redis_data:
+
+networks:
+  app-net-weliv:
+    external: true

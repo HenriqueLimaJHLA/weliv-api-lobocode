@@ -1,0 +1,4 @@
+# Scripts montados no Docker ou executados pelo bash no Linux devem ser sempre LF.
+docker/postgres-entrypoint.sh text eol=lf
+docker/*.sh text eol=lf
+scripts/*.sh text eol=lf

@@ -1,0 +1,35 @@
+# Dockerfile para desenvolvimento do backend NestJS
+FROM node:18-alpine
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Instalar dependências do sistema
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git
+
+# Copiar arquivos de dependências
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Instalar dependências
+RUN npm ci --legacy-peer-deps
+
+# Copiar código fonte
+COPY . .
+
+# Gerar cliente Prisma
+RUN npx prisma generate
+
+# Expor porta
+EXPOSE 3000
+
+# Script de inicialização
+COPY scripts/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Comando para desenvolvimento
+CMD ["/bin/sh", "/app/start.sh"] 

@@ -1,0 +1,30 @@
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: weliv-nginx
+    ports:
+      - '18080:80'   # weliv: bloco 18xxx
+      - '18443:443'  # weliv: bloco 18xxx
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/api.conf:/etc/nginx/api.conf:ro
+      - ../ssl:/etc/nginx/ssl:ro
+      - ../nginx/logs:/var/log/nginx
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    networks:
+      - app-net-weliv
+networks:
+  app-net-weliv:
+    external: true
+
+
+  

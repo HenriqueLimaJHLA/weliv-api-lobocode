@@ -1,0 +1,204 @@
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: weliv-nginx
+    ports:
+      - '18080:80'   # weliv: bloco 18xxx
+      - '18443:443'  # weliv: bloco 18xxx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/api.conf:/etc/nginx/api.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    networks:
+      - app-net-weliv
+
+  # Frontend Angular
+  frontend:
+    image: weliv-app-lobocode-frontend
+    container_name: frontend
+    ports:
+      - '42100:80'   # weliv: bloco 42xxx
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    networks:
+      - app-net-weliv
+
+  # Migration Service (executa ANTES do backend)
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: weliv-migration
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    command: sh -c "echo '🔄 Aguardando banco...' && sleep 10 && echo '📦 Executando migrações...' && npx prisma migrate deploy && echo '🌱 Executando seed...' && npx prisma db seed && echo '✅ Migrações concluídas!'"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: "no"
+    networks:
+      - app-net-weliv
+
+  # Backend NestJS
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: weliv-backend
+    env_file:
+      - .env
+    ports:
+      - '30100:3000'  # weliv: bloco 30xxx
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-password123}
+      - MINIO_USE_SSL=false
+      - MINIO_ENDPOINT=https://api.weliv.com.br/files
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.2'
+    networks:
+      - app-net-weliv
+
+  # Database PostgreSQL (usa postgres-entrypoint.sh para sincronizar senha com DB_PASSWORD)
+  db:
+    image: postgres:16.8-alpine3.20
+    container_name: weliv-db
+    ports:
+      - '15432:5432'  # weliv: bloco 15xxx
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+    volumes:
+      - weliv-api-lobocode_postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+      - ./postgres-entrypoint.sh:/usr/local/bin/postgres-entrypoint.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/postgres-entrypoint.sh"]
+    healthcheck:
+      # Só fica healthy DEPOIS do entrypoint sincronizar a senha (evita backend conectar com senha errada)
+      test: ['CMD-SHELL', 'test -f /tmp/postgres-entrypoint-done && pg_isready -U ${DB_USER}']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+    networks:
+      - app-net-weliv
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: weliv-redis
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+        reservations:
+          memory: 64M
+          cpus: '0.05'
+    networks:
+      - app-net-weliv
+
+  # MinIO - Armazenamento de Arquivos
+  minio:
+    image: minio/minio:latest
+    container_name: weliv-minio
+    env_file:
+      - .env
+    ports:
+      - '19000:9000'  # weliv: bloco 19xxx
+      - '19001:9001'  # weliv: bloco 19xxx
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+    restart: unless-stopped
+    networks:
+      - app-net-weliv
+
+volumes:
+  weliv-api-lobocode_postgres_data:
+    external: true
+  redis_data:
+  minio_data:
+
+networks:
+  app-net-weliv:
+    external: true
