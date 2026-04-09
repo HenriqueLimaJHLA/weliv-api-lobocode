@@ -10,6 +10,17 @@ const hashPassword = async (password: string) => {
 
 export async function runSeed() {
     try {
+        const existingCompany = await prisma.company.findFirst({
+            where: {
+                name: 'Weliv',
+            },
+        });
+
+        if (existingCompany) {
+            console.log('Company already exists:', existingCompany.name);
+            return;
+        }
+
         const company = await prisma.company.create({
             data: {
                 name: 'Weliv',
@@ -53,7 +64,6 @@ export async function runSeed() {
                 role: Roles.PATIENT,
                 status: UserStatus.ACTIVE,
                 cpf: '111.222.333-44',
-                companyId: company.id,
             },
         });
 

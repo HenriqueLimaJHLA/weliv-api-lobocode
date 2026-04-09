@@ -94,8 +94,8 @@ model User {
   role     Roles
   status   UserStatus @default(PENDING)
 
-  company   Company @relation(fields: [companyId], references: [id])
-  companyId String
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?
 
   documents Document[] @relation("DocumentSender")
   files     File[]     @relation("UserFiles")
