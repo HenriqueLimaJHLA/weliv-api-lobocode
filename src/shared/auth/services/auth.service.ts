@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from '../dto';
 import { IAuthResponse } from '../interfaces';
+import { LoginPortal } from '../login-portal';
 import { RefreshTokenService } from './refresh-token.service';
 import { AuditService } from './audit.service';
 import { LoginService } from './login.service';
@@ -18,8 +19,12 @@ export class AuthService {
     private readonly authValidator: AuthValidator,
   ) {}
 
-  async login(loginDto: LoginDto, request?: Request): Promise<IAuthResponse> {
-    return this.loginService.login(loginDto, request);
+  async login(
+    loginDto: LoginDto,
+    portal: LoginPortal,
+    request?: Request,
+  ): Promise<IAuthResponse> {
+    return this.loginService.login(loginDto, portal, request);
   }
 
   /**

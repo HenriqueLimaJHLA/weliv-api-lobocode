@@ -10,13 +10,14 @@ import {
 } from '@nestjs/common';
 import {
   LoginDto,
+  RegisterPatientDto,
   RefreshDto,
   LogoutDto,
   ForgotPasswordDto,
   ValidateResetTokenDto,
   ResetPasswordDto,
 } from './dto';
-import { AuthService } from './services';
+import { AuthService, PatientRegistrationService } from './services';
 import { AuthGuard, RefreshGuard, RateLimitGuard } from './guards';
 import { Public } from './decorators';
 import { PasswordResetService } from './services/password-reset.service';
@@ -29,6 +30,7 @@ import { UnauthorizedError } from '../common/errors';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly patientRegistrationService: PatientRegistrationService,
     private readonly passwordResetService: PasswordResetService,
     private readonly metricsService: MetricsService,
     private readonly messagesService: MessagesService,
@@ -37,8 +39,30 @@ export class AuthController {
   @Post('login')
   @Public()
   @UseGuards(RateLimitGuard)
-  async login(@Body() loginDto: LoginDto, @Req() request: Request) {
-    return this.authService.login(loginDto, request);
+  async loginPatient(@Body() loginDto: LoginDto, @Req() request: Request) {
+    return this.authService.login(loginDto, 'patient', request);
+  }
+
+  @Post('login/profissional')
+  @Public()
+  @UseGuards(RateLimitGuard)
+  async loginProfessional(@Body() loginDto: LoginDto, @Req() request: Request) {
+    return this.authService.login(loginDto, 'professional', request);
+  }
+
+  @Post('login/admin')
+  @Public()
+  @UseGuards(RateLimitGuard)
+  async loginAdmin(@Body() loginDto: LoginDto, @Req() request: Request) {
+    return this.authService.login(loginDto, 'admin', request);
+  }
+
+  @Post('register')
+  @Public()
+  @HttpCode(201)
+  @UseGuards(RateLimitGuard)
+  async registerPatient(@Body() dto: RegisterPatientDto) {
+    return this.patientRegistrationService.register(dto);
   }
 
   @Post('refresh')

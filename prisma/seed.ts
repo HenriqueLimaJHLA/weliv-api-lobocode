@@ -32,7 +32,7 @@ export async function runSeed() {
         const userAdmin = await prisma.user.create({
             data: {
                 email: 'admin@weliv.com',
-                login: 'admin@weliv.com',
+                login: 'adminWeliv',
                 name: 'Admin Weliv',
                 password: await hashPassword('AdminWeliv123'),
                 role: Roles.SYSTEM_ADMIN,

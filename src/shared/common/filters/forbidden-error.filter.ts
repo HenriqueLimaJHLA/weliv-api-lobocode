@@ -10,11 +10,20 @@ export class ForbiddenErrorFilter extends BaseExceptionFilter implements Excepti
   }
 
   catch(exception: ForbiddenError, host: ArgumentsHost) {
+    const portalMismatchMessage = this.messagesService.getErrorMessage(
+      'AUTH',
+      'WRONG_LOGIN_PORTAL',
+    );
+    const errorCode =
+      exception.message === portalMismatchMessage
+        ? 'LOGIN_PORTAL_MISMATCH'
+        : 'FORBIDDEN';
+
     this.sendErrorResponse(
       exception,
       host,
       HttpStatus.FORBIDDEN,
-      'FORBIDDEN',
+      errorCode,
       this.messagesService.getErrorMessage('AUTHORIZATION', 'FORBIDDEN'),
     );
   }

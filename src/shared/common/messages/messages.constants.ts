@@ -14,6 +14,7 @@ export const VALIDATION_MESSAGES = {
     LOGIN: 'Login é obrigatório',
     EMAIL: 'Email é obrigatório',
     PASSWORD: 'Senha é obrigatória',
+    CPF: 'CPF é obrigatório',
     ID: 'ID é obrigatório',
     ROLE: 'Role é obrigatória',
     PLATE: 'Placa é obrigatória',
@@ -74,6 +75,10 @@ export const VALIDATION_MESSAGES = {
   NUMBER: {
     MIN: 'Valor deve ser maior que {min}',
   },
+
+  MATCH: {
+    PASSWORD: 'A confirmação da senha não coincide com a senha',
+  },
 };
 
 // ============================================================================
@@ -85,6 +90,9 @@ export const ERROR_MESSAGES = {
   AUTH: {
     UNAUTHORIZED: 'Usuário não autenticado',
     INVALID_CREDENTIALS: 'Credenciais inválidas',
+    /** Conta válida, mas o perfil não corresponde ao portal de login utilizado. */
+    WRONG_LOGIN_PORTAL:
+      'Este acesso é exclusivo de outro perfil. Utilize o portal de entrada correto.',
     TOKEN_EXPIRED: 'Token expirado',
     TOKEN_INVALID: 'Token inválido',
     TOKEN_REQUIRED: 'Token é obrigatório',

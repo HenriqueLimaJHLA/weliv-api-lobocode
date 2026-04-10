@@ -80,11 +80,15 @@ export class RateLimitGuard implements CanActivate {
    * Obtém configuração de rate limit por endpoint
    */
   private getRateLimitConfig(endpoint: string) {
+    const loginLimit = {
+      maxAttempts: AUTH_CONSTANTS.RATE_LIMIT.LOGIN_MAX_ATTEMPTS,
+      windowMs: AUTH_CONSTANTS.RATE_LIMIT.LOGIN_WINDOW_MS,
+    };
     const configs = {
-      'POST:/auth/login': {
-        maxAttempts: AUTH_CONSTANTS.RATE_LIMIT.LOGIN_MAX_ATTEMPTS,
-        windowMs: AUTH_CONSTANTS.RATE_LIMIT.LOGIN_WINDOW_MS,
-      },
+      'POST:/auth/login': loginLimit,
+      'POST:/auth/login/profissional': loginLimit,
+      'POST:/auth/login/admin': loginLimit,
+      'POST:/auth/register': loginLimit,
       'POST:/auth/refresh': {
         maxAttempts: AUTH_CONSTANTS.RATE_LIMIT.REFRESH_MAX_ATTEMPTS,
         windowMs: AUTH_CONSTANTS.RATE_LIMIT.REFRESH_WINDOW_MS,

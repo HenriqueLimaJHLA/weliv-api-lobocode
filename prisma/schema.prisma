@@ -10,7 +10,7 @@
 // - Agenda: ProfessionalBlockedTime, ScheduleReminder, Appointment, WaitingListEntry
 // - Financeiro: Payment (app) + Charge (cobranças admin / ChargeRow)
 // - Admin: Integration, AuditLog
-// - Documentos: ClinicalDocument; Document (RH) ↔ File; MedicalRecord
+// - Documentos: Document (único) ↔ File; tipo via `documentType` (corporativo, clínico, prontuário)
 // - Notificações: Notification*, PushSubscription
 
 generator client {
@@ -52,20 +52,26 @@ enum FileType {
   OTHER
 }
 
-// --- Documento corporativo / RH (legado no domínio; não confundir com ClinicalDocument) ---
+// --- Documentos (único modelo; semântica via `DocumentType`) ---
 
-/// Destinatário interno do documento corporativo (fluxo RH).
-enum DocumentRecipientType {
-  HR
-  SUPERVISOR
-  ADMIN
+/// Tipo semântico do registo `Document` (corporativo, clínico ou anexo de prontuário).
+enum DocumentType {
+  CORPORATE_HR
+  CORPORATE_SUPERVISOR
+  CORPORATE_ADMIN
+  CLINICAL_EXAM
+  CLINICAL_PRESCRIPTION
+  CLINICAL_REPORT
+  CLINICAL_OTHER
+  MEDICAL_RECORD_ATTACHMENT
 }
 
-/// Estado de leitura/entrega do documento corporativo.
+/// Estado de entrega / disponibilidade (corporativo + clínico `READY`).
 enum DocumentStatus {
   PENDING
   VIEWED
   DOWNLOADED
+  READY
 }
 
 // --- Notificações in-app (alinhado ao frontend: tipo + actionUrl) ---
@@ -109,20 +115,6 @@ enum AppointmentStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
-}
-
-/// Documentos do paciente (exames, receitas, laudos) — espelha `Document` do frontend.
-enum ClinicalDocumentType {
-  EXAM
-  PRESCRIPTION
-  REPORT
-  OTHER
-}
-
-/// Disponibilidade do documento clínico para o paciente.
-enum ClinicalDocumentStatus {
-  PENDING
-  READY
 }
 
 /// Meio de pagamento registrado na consulta.
@@ -224,7 +216,6 @@ model Company {
   appointments       Appointment[]
   payments           Payment[]
   charges            Charge[]
-  clinicalDocuments  ClinicalDocument[]
   medicalRecords     MedicalRecord[]
   integrations       Integration[]
   auditLogs          AuditLog[]
@@ -355,23 +346,22 @@ model User {
   /// Ultimo acesso (admin `UserRow.lastAccess`).
   lastAccessAt DateTime?
 
-  /// Documentos corporativos enviados por este utilizador (fluxo RH).
-  documents                Document[]                @relation("DocumentSender")
+  /// Documentos corporativos (remetente) e metadados clínicos quando aplicável.
+  documentsSent                 Document[]                @relation("DocumentSender")
+  documentsAsPatient            Document[]                @relation("DocumentPatient")
+  documentsAsProfessionalAuthor Document[]                @relation("DocumentProfessionalAuthor")
   /// Metadados de ficheiros carregados por este utilizador.
-  files                    File[]                    @relation("UserFiles")
-  pushSubscriptions        PushSubscription[]        @relation("UserPushSubscriptions")
-  notificationGroupMembers NotificationGroupMember[] @relation("UserGroupMemberships")
+  files                         File[]                    @relation("UserFiles")
+  pushSubscriptions             PushSubscription[]        @relation("UserPushSubscriptions")
+  notificationGroupMembers      NotificationGroupMember[] @relation("UserGroupMemberships")
   /// Inbox: notificações recebidas (linha por campanha).
-  notificationRecipients   NotificationRecipient[]   @relation("UserNotifications")
+  notificationRecipients        NotificationRecipient[]   @relation("UserNotifications")
 
   /// Bloqueios de agenda do profissional (`role = PROFESSIONAL`); dados operacionais da clínica vivem em `Company`.
   professionalBlockedTimes ProfessionalBlockedTime[]
 
   patientAppointments      Appointment[] @relation("PatientAppointments")
   professionalAppointments Appointment[] @relation("ProfessionalAppointments")
-
-  clinicalDocumentsAsPatient ClinicalDocument[] @relation("ClinicalDocPatient")
-  clinicalDocumentsAsAuthor  ClinicalDocument[] @relation("ClinicalDocProfessional")
 
   paymentsAsPatient      Payment[] @relation("PaymentPatient")
   paymentsAsProfessional Payment[] @relation("PaymentProfessional")
@@ -562,9 +552,9 @@ model Appointment {
   depositAmount    Decimal @default(0) @db.Decimal(12, 2)
   notes            String? @db.Text
 
-  clinicalDocuments ClinicalDocument[]
-  payments          Payment[]
-  charges           Charge[]
+  documents Document[] @relation("AppointmentDocuments")
+  payments  Payment[]
+  charges   Charge[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -596,49 +586,6 @@ model WaitingListEntry {
   @@index([patientId])
   @@index([professionalId])
   @@index([desiredDate])
-}
-
-// ============================================================================
-// Documentos clínicos do paciente (frontend `Document`)
-// ============================================================================
-
-/// Documento do doente (exame, receita, etc.). Distinto do modelo `Document` (RH).
-model ClinicalDocument {
-  id String @id @default(cuid())
-
-  companyId String?
-  company   Company? @relation(fields: [companyId], references: [id])
-
-  patientId String
-  patient   User   @relation("ClinicalDocPatient", fields: [patientId], references: [id], onDelete: Cascade)
-
-  professionalId String?
-  professional   User?   @relation("ClinicalDocProfessional", fields: [professionalId], references: [id], onDelete: SetNull)
-
-  appointmentId String?
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-
-  type       ClinicalDocumentType
-  name       String
-  url        String
-  status     ClinicalDocumentStatus @default(PENDING)
-  /// Alinhado a `uploadedAt` no frontend (`Document`).
-  uploadedAt DateTime               @default(now())
-
-  fileId String? @unique
-  file   File?   @relation("ClinicalDocumentFile", fields: [fileId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@index([companyId])
-  @@index([patientId])
-  @@index([professionalId])
-  @@index([appointmentId])
-  @@index([type])
-  @@index([status])
-  @@index([deletedAt])
 }
 
 // ============================================================================
@@ -712,7 +659,7 @@ model MedicalRecord {
   chiefComplaint  String   @db.Text
   clinicalSummary String   @db.Text
 
-  pdfAttachments MedicalRecordAttachment[]
+  documents Document[] @relation("MedicalRecordDocuments")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -725,28 +672,11 @@ model MedicalRecord {
   @@index([deletedAt])
 }
 
-/// PDF ou anexo ligado ao prontuário; opcionalmente amarrado a um `File` no MinIO.
-model MedicalRecordAttachment {
-  id String @id @default(cuid())
-
-  medicalRecordId String
-  medicalRecord   MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
-
-  name       String
-  url        String
-  uploadedAt DateTime @default(now())
-
-  fileId String? @unique
-  file   File?   @relation("MedicalRecordAttachmentFile", fields: [fileId], references: [id], onDelete: SetNull)
-
-  @@index([medicalRecordId])
-}
-
 // ============================================================================
 // Ficheiros (MinIO)
 // ============================================================================
 
-/// Objeto binário no armazenamento; pode servir documento RH, clínico ou anexo de prontuário (relações 0..1 cada).
+/// Objeto binário no armazenamento; cada `File` pode ser referenciado por no máximo um `Document`.
 model File {
   id           String   @id @default(cuid())
   originalName String
@@ -763,9 +693,6 @@ model File {
   uploadedByUser User?     @relation("UserFiles", fields: [uploadedBy], references: [id])
   document       Document? @relation("DocumentFile")
 
-  clinicalDocument  ClinicalDocument?        @relation("ClinicalDocumentFile")
-  medicalAttachment MedicalRecordAttachment? @relation("MedicalRecordAttachmentFile")
-
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -780,31 +707,56 @@ model File {
 }
 
 // ============================================================================
-// Documento corporativo (RH) — mantido; não é o mesmo que ClinicalDocument
+// Documento único (corporativo, clínico ou anexo de prontuário) ↔ File
 // ============================================================================
 
-/// Documento institucional (RH/supervisão). Um `File` exclusivo por registo (`fileId` único).
+/// Metadados do documento; o binário está sempre em `File` (`fileId` 1:1).
 model Document {
-  id            String                @id @default(cuid())
-  recipientType DocumentRecipientType
-  description   String?
-  status        DocumentStatus        @default(PENDING)
+  id           String         @id @default(cuid())
+  documentType DocumentType
+  status       DocumentStatus @default(PENDING)
+  description  String?
+  /// Título ou nome exibido (clínico, anexo de prontuário, etc.).
+  name         String?
+  /// URL opcional (legado); preferir `file.url`.
+  url          String?
 
-  fileId    String   @unique
-  file      File     @relation("DocumentFile", fields: [fileId], references: [id])
-  userId    String
-  user      User     @relation("DocumentSender", fields: [userId], references: [id])
+  fileId String @unique
+  file   File   @relation("DocumentFile", fields: [fileId], references: [id])
+
+  /// Remetente — fluxo corporativo (RH); opcional noutros tipos.
+  userId String?
+  user   User?   @relation("DocumentSender", fields: [userId], references: [id], onDelete: Cascade)
+
   companyId String?
   company   Company? @relation("CompanyDocuments", fields: [companyId], references: [id])
+
+  patientId String?
+  patient   User?   @relation("DocumentPatient", fields: [patientId], references: [id], onDelete: Cascade)
+
+  professionalId String?
+  professional   User?   @relation("DocumentProfessionalAuthor", fields: [professionalId], references: [id], onDelete: SetNull)
+
+  appointmentId String?
+  appointment   Appointment? @relation("AppointmentDocuments", fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  medicalRecordId String?
+  medicalRecord   MedicalRecord? @relation("MedicalRecordDocuments", fields: [medicalRecordId], references: [id], onDelete: Cascade)
+
+  uploadedAt DateTime @default(now())
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@index([userId])
-  @@index([recipientType])
+  @@index([documentType])
   @@index([status])
+  @@index([userId])
   @@index([companyId])
+  @@index([patientId])
+  @@index([professionalId])
+  @@index([appointmentId])
+  @@index([medicalRecordId])
   @@index([createdAt])
   @@index([deletedAt])
 }
