@@ -10,6 +10,8 @@ import { SecurityService } from './security.service';
 import { AuthValidator } from '../validators/auth.validator';
 import { MessagesService } from '../../common/messages/messages.service';
 import { Request } from 'express';
+import { ForbiddenError } from '../../common/errors';
+import { LoginPortal, isRoleAllowedForPortal } from '../login-portal';
 
 @Injectable()
 export class LoginService {
@@ -19,16 +21,27 @@ export class LoginService {
     private readonly refreshTokenService: RefreshTokenService,
     private readonly auditService: AuditService,
     private readonly securityService: SecurityService,
-    private readonly authValidator: AuthValidator
+    private readonly authValidator: AuthValidator,
+    private readonly messagesService: MessagesService,
   ) {}
 
   /**
-   * Realiza login do usuário
+   * Realiza login do usuário no portal indicado (paciente, profissional ou admin).
    */
-  async login(loginDto: LoginDto, request?: Request): Promise<IAuthResponse> {
+  async login(
+    loginDto: LoginDto,
+    portal: LoginPortal,
+    request?: Request,
+  ): Promise<IAuthResponse> {
     try {
       // Validar credenciais usando AuthValidator
       const user = await this.authValidator.validateCredentials(loginDto);
+
+      if (!isRoleAllowedForPortal(user.role, portal)) {
+        throw new ForbiddenError(
+          this.messagesService.getErrorMessage('AUTH', 'WRONG_LOGIN_PORTAL'),
+        );
+      }
 
       // Análise de segurança se request estiver disponível
       if (request) {

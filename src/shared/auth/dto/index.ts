@@ -1,4 +1,5 @@
 export { LoginDto } from './login.dto';
+export { RegisterPatientDto } from './register-patient.dto';
 export { RefreshDto } from './refresh.dto';
 export { LogoutDto } from './logout.dto';
 export { ForgotPasswordDto } from './forgot-password.dto';

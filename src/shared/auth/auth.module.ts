@@ -13,6 +13,7 @@ import { AuditService } from './services/audit.service';
 import { SecurityService } from './services/security.service';
 import { MetricsService } from './services/metrics.service';
 import { LoginService } from './services/login.service';
+import { PatientRegistrationService } from './services/patient-registration.service';
 import { AuthValidator } from './validators/auth.validator';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -56,6 +57,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     SecurityService,
     MetricsService,
     LoginService,
+    PatientRegistrationService,
     AuthValidator,
     AuthGuard,
     RefreshGuard,
@@ -74,6 +76,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     SecurityService,
     MetricsService,
     LoginService,
+    PatientRegistrationService,
     AuthValidator,
     AuthGuard,
     RefreshGuard,
