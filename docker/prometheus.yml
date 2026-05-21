@@ -1,9 +1,0 @@
-global:
-  scrape_interval: 5s
- 
-scrape_configs:
-  - job_name: 'nestjs-backend'
-    metrics_path: /metrics
-    static_configs:
-      # Backend: use backend:3000 se no mesmo Docker network, ou host.docker.internal:30100 se backend no host
-      - targets: ['backend:3000'] 

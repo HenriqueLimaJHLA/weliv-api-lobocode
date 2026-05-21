@@ -1,65 +1,80 @@
+# Postgres + Redis + MinIO — todos os nomes e portas vêm do .env (ver .env.example).
+name: ${COMPOSE_DATABASE_PROJECT_NAME}
+
 services:
-  # Database PostgreSQL
   db:
     image: postgres:16.8-alpine3.20
-    container_name: weliv-db
+    container_name: ${DB_CONTAINER_NAME}
     env_file:
-      - .env
+      - ../.env
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
     ports:
-      - '15432:5432'  # weliv: bloco 15xxx
+      - "${DB_HOST_PORT}:5432"
     volumes:
-      - weliv-api-lobocode_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./postgres-entrypoint.sh:/usr/local/bin/postgres-entrypoint.sh:ro
     entrypoint: ["/bin/bash", "/usr/local/bin/postgres-entrypoint.sh"]
     healthcheck:
-      # Só fica healthy DEPOIS do entrypoint sincronizar a senha (evita backend conectar com senha errada)
-      test: ['CMD-SHELL', 'test -f /tmp/postgres-entrypoint-done && pg_isready -U ${DB_USER}']
+      test:
+        [
+          "CMD-SHELL",
+          "test -f /tmp/postgres-entrypoint-done && pg_isready -U ${DB_USER}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 60s
-    # Recursos para ~50 usuários e bastante requisição diária (ajuste conforme monitoramento)
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '1.0'
-        reservations:
-          memory: 1G
-          cpus: '0.5'
     restart: unless-stopped
     networks:
-      - app-net-weliv
+      - stack
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: weliv-redis
+    container_name: ${REDIS_CONTAINER_NAME}
     ports:
-      - '16379:6379'  # weliv: bloco 16xxx
+      - "${REDIS_HOST_PORT}:6379"
     volumes:
       - redis_data:/data
-    deploy:
-      resources:  
-        limits:
-          memory: 256M
-          cpus: '0.2'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
     restart: unless-stopped
     networks:
-      - app-net-weliv
+      - stack
+
+  minio:
+    image: minio/minio:latest
+    container_name: ${MINIO_CONTAINER_NAME}
+    env_file:
+      - ../.env
+    ports:
+      - "${MINIO_API_HOST_PORT}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - stack
 
 volumes:
-  weliv-api-lobocode_postgres_data:
+  postgres_data:
+    name: ${POSTGRES_VOLUME_NAME}
     external: true
   redis_data:
+    name: ${REDIS_VOLUME_NAME}
+  minio_data:
+    name: ${MINIO_VOLUME_NAME}
 
 networks:
-  app-net-weliv:
+  stack:
+    name: ${DOCKER_NETWORK_NAME}
     external: true

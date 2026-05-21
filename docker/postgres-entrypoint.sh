@@ -8,7 +8,7 @@ set -e
 echo "🚀 [postgres-entrypoint] Iniciando PostgreSQL..."
 
 # Executar entrypoint oficial do PostgreSQL em background (stdin fechado para não receber EOF e morrer)
-/usr/local/bin/docker-entrypoint.sh postgres "$@" </dev/null &
+</dev/null /usr/local/bin/docker-entrypoint.sh postgres "$@" &
 POSTGRES_PID=$!
 
 term_handler() {
