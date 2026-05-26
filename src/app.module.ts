@@ -37,7 +37,18 @@ import {
   PrismaErrorFilter,
 } from './shared/common/filters';
 import { FilesModule } from './shared/files/files.module';
-//javascript es7
+import { UsersModule } from './modules/users/users.module';
+import { CompaniesModule } from './modules/companies/companies.module';
+import { OpeningHoursModule } from './modules/opening-hours/opening-hours.module';
+import { AvailabilitiesModule } from './modules/availabilities/availabilities.module';
+import { AppointmentsModule } from './modules/appointments/appointments.module';
+import { ServicesModule } from './modules/services/services.module';
+import { ProfessionalsModule } from './modules/professionals/professionals.module';
+import { ProviderSettingsModule } from './modules/provider-settings/provider-settings.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { ChargesModule } from './modules/charges/charges.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -54,6 +65,18 @@ import { FilesModule } from './shared/files/files.module';
     PrometheusModule.register(),
     AuthModule,
     FilesModule,
+    UsersModule,
+    CompaniesModule,
+    OpeningHoursModule,
+    AvailabilitiesModule,
+    AppointmentsModule,
+    ServicesModule,
+    ProfessionalsModule,
+    ProviderSettingsModule,
+    PaymentsModule,
+    ChargesModule,
+    NotificationsModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [

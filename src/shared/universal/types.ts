@@ -5,12 +5,36 @@
 export type EntityNameModel =
   | 'user'
   | 'company'
-  // Weliv
+  | 'companyUnit'
+  | 'specialty'
+  | 'service'
+  | 'appointment'
+  | 'waitingListEntry'
+  | 'professionalBlockedTime'
+  | 'scheduleReminder'
+  | 'payment'
+  | 'charge'
+  | 'medicalRecord'
+  | 'document'
+  | 'notification'
+  | 'auditLog'
 
 export type EntityNameCasl =
   | 'User'
   | 'Company'
-  // weliv
+  | 'CompanyUnit'
+  | 'Specialty'
+  | 'Service'
+  | 'Appointment'
+  | 'WaitingListEntry'
+  | 'ProfessionalBlockedTime'
+  | 'ScheduleReminder'
+  | 'Payment'
+  | 'Charge'
+  | 'MedicalRecord'
+  | 'Document'
+  | 'Notification'
+  | 'AuditLog'
 
 // ============================================================================
 // 🔄 MAPEAMENTO AUTOMÁTICO MODEL ↔ CASL
@@ -20,11 +44,21 @@ export type EntityNameCasl =
  * Mapeamento entre nomes de entidade do Prisma (model) e CASL (permissions)
  */
 export const ENTITY_MAPPING = {
-  // Core entities
   user: 'User',
   company: 'Company',
-  // Operational entities
-  // weliv
+  companyUnit: 'CompanyUnit',
+  specialty: 'Specialty',
+  service: 'Service',
+  appointment: 'Appointment',
+  waitingListEntry: 'WaitingListEntry',
+  professionalBlockedTime: 'ProfessionalBlockedTime',
+  scheduleReminder: 'ScheduleReminder',
+  payment: 'Payment',
+  charge: 'Charge',
+  medicalRecord: 'MedicalRecord',
+  document: 'Document',
+  notification: 'Notification',
+  auditLog: 'AuditLog',
 } as const;
 
 /**
@@ -33,7 +67,19 @@ export const ENTITY_MAPPING = {
 export const CASL_TO_MODEL_MAPPING = {
   User: 'user',
   Company: 'company',
-  // weliv
+  CompanyUnit: 'companyUnit',
+  Specialty: 'specialty',
+  Service: 'service',
+  Appointment: 'appointment',
+  WaitingListEntry: 'waitingListEntry',
+  ProfessionalBlockedTime: 'professionalBlockedTime',
+  ScheduleReminder: 'scheduleReminder',
+  Payment: 'payment',
+  Charge: 'charge',
+  MedicalRecord: 'medicalRecord',
+  Document: 'document',
+  Notification: 'notification',
+  AuditLog: 'auditLog',
 } as const;
 
 // ============================================================================
