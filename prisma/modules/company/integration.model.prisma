@@ -1,0 +1,24 @@
+// ============================================================================
+// Admin — integrações (`IntegrationRow`)
+// ============================================================================
+
+model Integration {
+  id String @id @default(cuid())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  name          String
+  type          String
+  lastSyncLabel String? /// texto livre UI ("Há 3 min", "Falhou")
+  lastSyncAt    DateTime?
+  latencyMs     Int?
+  status        IntegrationHealthStatus @default(HEALTHY)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([status])
+}

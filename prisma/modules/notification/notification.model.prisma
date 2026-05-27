@@ -1,0 +1,33 @@
+// ============================================================================
+// Notificações (campanhas + recipients; category/actionUrl alinhados ao app)
+// ============================================================================
+
+/// Campanha ou aviso único. Destinatários efetivos em `NotificationRecipient`; segmentação opcional em `NotificationTarget`.
+model Notification {
+  id         String  @id @default(cuid())
+  title      String
+  message    String
+  entityType String?
+  entityId   String?
+
+  category  AppNotificationCategory?
+  actionUrl String?
+
+  companyId       String?
+  company         Company? @relation("CompanyNotifications", fields: [companyId], references: [id])
+  createdByUserId String?
+
+  recipients NotificationRecipient[] @relation("NotificationRecipients")
+  targets    NotificationTarget[]    @relation("NotificationTargets")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([category])
+  @@index([createdAt])
+  @@index([deletedAt])
+}

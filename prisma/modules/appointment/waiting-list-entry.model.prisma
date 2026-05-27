@@ -1,0 +1,19 @@
+/// Pedido de vaga quando o horário desejado não está livre.
+model WaitingListEntry {
+  id String @id @default(cuid())
+
+  patientId String
+  patient   User   @relation("WaitingListPatient", fields: [patientId], references: [id], onDelete: Cascade)
+
+  professionalId String
+  professional   User   @relation("WaitingListProfessional", fields: [professionalId], references: [id], onDelete: Cascade)
+
+  desiredDate DateTime @db.Date
+  desiredTime String
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId])
+  @@index([professionalId])
+  @@index([desiredDate])
+}

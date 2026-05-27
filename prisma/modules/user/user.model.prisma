@@ -1,0 +1,97 @@
+// ============================================================================
+// Utilizador (auth); campos extra alinhados ao `User` do frontend (telefone, avatar, nascimento)
+// ============================================================================
+
+/// Conta autenticável. Campos `professional*` / agenda espelham `Professional` em `mockData` (sobrepõem `Company` quando preenchidos).
+/// `healthPlan` / `patientCareStatus` alinham `PatientRow` do admin.
+model User {
+  id       String     @id @default(cuid())
+  name     String
+  login    String     @unique
+  email    String     @unique
+  cpf      String     @unique
+  password String
+  role     Roles
+  status   UserStatus @default(PENDING)
+
+  /// Telefone e avatar: `User` / `Professional` / `Patient` no frontend.
+  phone     String?
+  avatarUrl String?
+  birthDate DateTime? @db.Date
+
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?
+
+  /// Unidade principal de lotação (`UserRow.unit` no admin).
+  primaryUnit   CompanyUnit? @relation("UserPrimaryUnit", fields: [primaryUnitId], references: [id], onDelete: SetNull)
+  primaryUnitId String?
+
+  /// --- Profissional (`mockProfessionals`) — opcional; null usa defaults da `Company`. ---
+  professionalTitle   String?
+  biography           String?  @db.Text
+  professionalCnpj    String?
+  professionalAddress String?
+  /// CRM / registro no conselho (`registrationNumber` no mock).
+  registrationNumber  String?
+  /// Texto livre; pode alinhar depois a `Specialty` por catálogo.
+  specialty           String?
+  consultationPrice   Decimal? @db.Decimal(12, 2)
+  acceptsInsurance    Boolean?
+  insurances          Json?
+  availableSchedule   Json?
+  remarcationEnabled  Boolean?
+  remarcationLimit    Int?
+  waitingListEnabled  Boolean?
+  depositPercentage   Int?
+
+  /// --- Paciente (admin `PatientRow.plan`) ---
+  healthPlan        String?
+  patientCareStatus PatientCareStatus?
+
+  /// Ultimo acesso (admin `UserRow.lastAccess`).
+  lastAccessAt DateTime?
+
+  /// Documentos corporativos (remetente) e metadados clínicos quando aplicável.
+  documentsSent                 Document[]                @relation("DocumentSender")
+  documentsAsPatient            Document[]                @relation("DocumentPatient")
+  documentsAsProfessionalAuthor Document[]                @relation("DocumentProfessionalAuthor")
+  /// Metadados de ficheiros carregados por este utilizador.
+  files                         File[]                    @relation("UserFiles")
+  pushSubscriptions             PushSubscription[]        @relation("UserPushSubscriptions")
+  notificationGroupMembers      NotificationGroupMember[] @relation("UserGroupMemberships")
+  /// Inbox: notificações recebidas (linha por campanha).
+  notificationRecipients        NotificationRecipient[]   @relation("UserNotifications")
+
+  /// Bloqueios de agenda do profissional (`role = PROFESSIONAL`); dados operacionais da clínica vivem em `Company`.
+  professionalBlockedTimes ProfessionalBlockedTime[]
+
+  patientAppointments      Appointment[] @relation("PatientAppointments")
+  professionalAppointments Appointment[] @relation("ProfessionalAppointments")
+
+  paymentsAsPatient      Payment[] @relation("PaymentPatient")
+  paymentsAsProfessional Payment[] @relation("PaymentProfessional")
+
+  medicalRecordsAsPatient      MedicalRecord[] @relation("MedicalRecordPatient")
+  medicalRecordsAsProfessional MedicalRecord[] @relation("MedicalRecordProfessional")
+
+  waitingListAsPatient      WaitingListEntry[] @relation("WaitingListPatient")
+  waitingListAsProfessional WaitingListEntry[] @relation("WaitingListProfessional")
+
+  /// Lembretes criados pelo profissional na sua agenda.
+  scheduleReminders ScheduleReminder[]
+
+  chargesAsPatient Charge[]   @relation("ChargePatient")
+  auditLogsAsActor AuditLog[] @relation("AuditLogActor")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([primaryUnitId])
+  @@index([id])
+  @@index([email])
+  @@index([patientCareStatus])
+  @@index([createdAt])
+  @@index([deletedAt])
+}

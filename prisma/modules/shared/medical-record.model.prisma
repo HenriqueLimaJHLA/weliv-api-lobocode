@@ -1,0 +1,45 @@
+// ============================================================================
+// Prontuário (medicalRecordService no frontend)
+// ============================================================================
+
+/// Evolução clínica por par (profissional, paciente); campos do paciente podem estar denormalizados para histórico.
+model MedicalRecord {
+  id String @id @default(cuid())
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  professionalUserId String
+  professional       User   @relation("MedicalRecordProfessional", fields: [professionalUserId], references: [id], onDelete: Cascade)
+
+  patientUserId String
+  patient       User   @relation("MedicalRecordPatient", fields: [patientUserId], references: [id], onDelete: Cascade)
+
+  /// Denormalizados para histórico / exibição (espelho do frontend).
+  patientName      String
+  patientCpf       String
+  patientBirthDate DateTime @db.Date
+
+  bloodType          String?
+  /// string[] no frontend
+  allergies          Json    @default("[]")
+  chronicConditions  Json    @default("[]")
+  /// { name, dosage, since }[]
+  currentMedications Json    @default("[]")
+
+  lastConsultAt   DateTime
+  chiefComplaint  String   @db.Text
+  clinicalSummary String   @db.Text
+
+  documents Document[] @relation("MedicalRecordDocuments")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([professionalUserId])
+  @@index([patientUserId])
+  @@index([lastConsultAt])
+  @@index([deletedAt])
+}

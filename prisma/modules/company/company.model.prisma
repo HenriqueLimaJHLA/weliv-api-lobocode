@@ -1,0 +1,59 @@
+// ============================================================================
+// Tenant
+// ============================================================================
+
+/// Organização (tenant). Filiais: `CompanyUnit` (`ChargeRow.unit`, `UserRow.unit` no admin).
+model Company {
+  id   String @id @default(cuid())
+  name String
+
+  /// Destaque público / nome fantasia.
+  tagline            String?
+  /// Apresentação institucional.
+  description        String?  @db.Text
+  cnpj               String?
+  address            String?
+  /// Registro operacional da sede (CNES, alvará).
+  registrationNumber String?
+  /// Especialidade principal divulgada pela marca.
+  specialty          String?
+  /// Preço base de referência (profissional pode sobrepor em `User.consultationPrice`).
+  consultationPrice  Decimal? @db.Decimal(12, 2)
+  acceptsInsurance   Boolean  @default(false)
+  /// Lista de convênios (`string[]` JSON); profissional pode sobrepor em `User.insurances`.
+  insurances         Json     @default("[]")
+  /// Grade padrão `WeekSchedule` (JSON); profissional pode sobrepor em `User.availableSchedule`.
+  availableSchedule  Json     @default("{}")
+
+  remarcationEnabled Boolean @default(true)
+  remarcationLimit   Int     @default(0)
+  waitingListEnabled Boolean @default(false)
+  /// Percentual de sinal: 0, 10, 30 ou 100.
+  depositPercentage  Int     @default(0)
+
+  units              CompanyUnit[]
+  specialties        Specialty[]
+  services           Service[]
+  users              User[]
+  documents          Document[]          @relation("CompanyDocuments")
+  files              File[]              @relation("CompanyFiles")
+  notifications      Notification[]      @relation("CompanyNotifications")
+  notificationGroups NotificationGroup[] @relation("CompanyNotificationGroups")
+  appointments       Appointment[]
+  payments           Payment[]
+  charges            Charge[]
+  medicalRecords     MedicalRecord[]
+  integrations       Integration[]
+  auditLogs          AuditLog[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([id])
+  @@index([name])
+  @@index([specialty])
+  @@index([cnpj])
+  @@index([createdAt])
+  @@index([updatedAt])
+}

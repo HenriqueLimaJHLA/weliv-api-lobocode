@@ -1,0 +1,29 @@
+// ============================================================================
+// Admin — auditoria (`AuditLogRow`)
+// ============================================================================
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  event       String
+  actorName   String
+  area        String
+  /// Rótulo de data/hora exibido no mock; use também `occurredAt` para ordenação.
+  occurredAt  DateTime @default(now())
+  displayTime String?
+
+  actorUserId String?
+  actorUser   User?   @relation("AuditLogActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  severity AuditLogSeverity @default(OK)
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([occurredAt])
+  @@index([severity])
+  @@index([actorUserId])
+}

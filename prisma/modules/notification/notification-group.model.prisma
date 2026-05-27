@@ -1,0 +1,26 @@
+/// Agrupamento de utilizadores para disparo de notificações (por empresa).
+model NotificationGroup {
+  id           String                @id @default(cuid())
+  name         String
+  description  String?
+  type         NotificationGroupType
+  isActive     Boolean               @default(true)
+  roleFilter   Roles?
+  sectorFilter String?
+
+  companyId     String
+  company       Company                   @relation("CompanyNotificationGroups", fields: [companyId], references: [id])
+  members       NotificationGroupMember[] @relation("GroupMembers")
+  notifications NotificationTarget[]      @relation("GroupNotifications")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([companyId])
+  @@index([type])
+  @@index([isActive])
+  @@index([roleFilter])
+  @@index([deletedAt])
+}

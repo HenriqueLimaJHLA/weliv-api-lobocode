@@ -1,0 +1,27 @@
+/// Meio de pagamento registrado na consulta.
+enum PaymentMethod {
+  PIX
+  CREDIT
+  DEBIT
+  BOLETO
+}
+
+/// Estado da cobrança/pagamento.
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+/// Cobrança / contas a receber (`ChargeRow` no admin; `cartão` agrega crédito/débito).
+enum ChargeMethod {
+  PIX
+  CARD
+  BOLETO
+}
+
+enum ChargeStatus {
+  PENDING
+  PAID
+  OVERDUE
+}

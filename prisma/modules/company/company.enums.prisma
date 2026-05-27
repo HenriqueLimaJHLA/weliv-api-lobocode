@@ -1,0 +1,12 @@
+/// Itens de catálogo (especialidade, serviço) — `adminCatalogEntities`.
+enum CatalogItemStatus {
+  ACTIVE
+  INACTIVE
+}
+
+/// Saúde da integração (`IntegrationRow.status`).
+enum IntegrationHealthStatus {
+  HEALTHY
+  UNSTABLE
+  DOWN
+}

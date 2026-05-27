@@ -1,0 +1,20 @@
+/// Regra de segmentação de uma notificação (utilizador, papel, grupo, etc.).
+model NotificationTarget {
+  id      String                 @id @default(cuid())
+  type    NotificationTargetType
+  userId  String?
+  roleId  Roles?
+  groupId String?
+
+  notificationId String
+  notification   Notification       @relation("NotificationTargets", fields: [notificationId], references: [id], onDelete: Cascade)
+  targetGroup    NotificationGroup? @relation("GroupNotifications", fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([notificationId])
+  @@index([type])
+  @@index([userId])
+  @@index([roleId])
+  @@index([groupId])
+}

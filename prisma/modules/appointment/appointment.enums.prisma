@@ -1,0 +1,13 @@
+/// Modalidade da consulta (extensível no futuro, ex.: telemedicina).
+enum AppointmentType {
+  PRESENCIAL
+}
+
+/// Estado operacional do agendamento.
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
