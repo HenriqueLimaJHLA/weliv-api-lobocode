@@ -1,0 +1,21 @@
+/// Unidade / filial (`ChargeRow.unit`, `UserRow.unit` no admin).
+model CompanyUnit {
+  id        String  @id @default(cuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  name     String
+  code     String?
+  address  String?
+  isActive Boolean @default(true)
+
+  users   User[]   @relation("UserPrimaryUnit")
+  charges Charge[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([name])
+}

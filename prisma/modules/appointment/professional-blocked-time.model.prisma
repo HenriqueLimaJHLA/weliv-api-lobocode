@@ -1,0 +1,21 @@
+// ============================================================================
+// Agenda — bloqueios por profissional
+// ============================================================================
+
+/// Intervalo indisponível na agenda **do profissional** (utilizador). Políticas e grade horária da clínica: `Company`.
+model ProfessionalBlockedTime {
+  id                 String @id @default(cuid())
+  professionalUserId String
+  professional       User   @relation(fields: [professionalUserId], references: [id], onDelete: Cascade)
+
+  blockedDate DateTime @db.Date
+  startTime   String
+  endTime     String
+  reason      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalUserId])
+  @@index([blockedDate])
+}

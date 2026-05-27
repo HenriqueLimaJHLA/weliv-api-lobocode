@@ -1,0 +1,42 @@
+// Enums de documentos, ficheiros e auditoria (modelos em `shared/`)
+
+// --- Armazenamento genérico (MinIO) ---
+
+/// Tipo semântico do ficheiro no armazenamento objeto (S3/MinIO).
+enum FileType {
+  PROFILE_IMAGE
+  DOCUMENT
+  REPORT
+  VIDEO
+  AUDIO
+  OTHER
+}
+
+// --- Documentos (único modelo; semântica via `DocumentType`) ---
+
+/// Tipo semântico do registo `Document` (corporativo, clínico ou anexo de prontuário).
+enum DocumentType {
+  CORPORATE_HR
+  CORPORATE_SUPERVISOR
+  CORPORATE_ADMIN
+  CLINICAL_EXAM
+  CLINICAL_PRESCRIPTION
+  CLINICAL_REPORT
+  CLINICAL_OTHER
+  MEDICAL_RECORD_ATTACHMENT
+}
+
+/// Estado de entrega / disponibilidade (corporativo + clínico `READY`).
+enum DocumentStatus {
+  PENDING
+  VIEWED
+  DOWNLOADED
+  READY
+}
+
+/// Severidade do evento de auditoria (`AuditLogRow.status`).
+enum AuditLogSeverity {
+  OK
+  WARNING
+  CRITICAL
+}

@@ -1,0 +1,20 @@
+/// Uma linha por utilizador destino: lido/não lido (inbox).
+model NotificationRecipient {
+  id     String    @id @default(cuid())
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  notificationId String
+  notification   Notification @relation("NotificationRecipients", fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([notificationId, userId])
+  @@index([userId])
+  @@index([notificationId])
+  @@index([isRead])
+  @@index([readAt])
+}

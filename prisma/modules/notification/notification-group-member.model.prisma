@@ -1,0 +1,15 @@
+/// N:N entre `NotificationGroup` e `User`.
+model NotificationGroupMember {
+  id      String            @id @default(cuid())
+  groupId String
+  group   NotificationGroup @relation("GroupMembers", fields: [groupId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User              @relation("UserGroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  addedBy   String?
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}

@@ -1,0 +1,54 @@
+// ============================================================================
+// Documento único (corporativo, clínico ou anexo de prontuário) ↔ File
+// ============================================================================
+
+/// Metadados do documento; o binário está sempre em `File` (`fileId` 1:1).
+model Document {
+  id           String         @id @default(cuid())
+  documentType DocumentType
+  status       DocumentStatus @default(PENDING)
+  description  String?
+  /// Título ou nome exibido (clínico, anexo de prontuário, etc.).
+  name         String?
+  /// URL opcional (legado); preferir `file.url`.
+  url          String?
+
+  fileId String @unique
+  file   File   @relation("DocumentFile", fields: [fileId], references: [id])
+
+  /// Remetente — fluxo corporativo (RH); opcional noutros tipos.
+  userId String?
+  user   User?   @relation("DocumentSender", fields: [userId], references: [id], onDelete: Cascade)
+
+  companyId String?
+  company   Company? @relation("CompanyDocuments", fields: [companyId], references: [id])
+
+  patientId String?
+  patient   User?   @relation("DocumentPatient", fields: [patientId], references: [id], onDelete: Cascade)
+
+  professionalId String?
+  professional   User?   @relation("DocumentProfessionalAuthor", fields: [professionalId], references: [id], onDelete: SetNull)
+
+  appointmentId String?
+  appointment   Appointment? @relation("AppointmentDocuments", fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  medicalRecordId String?
+  medicalRecord   MedicalRecord? @relation("MedicalRecordDocuments", fields: [medicalRecordId], references: [id], onDelete: Cascade)
+
+  uploadedAt DateTime @default(now())
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([documentType])
+  @@index([status])
+  @@index([userId])
+  @@index([companyId])
+  @@index([patientId])
+  @@index([professionalId])
+  @@index([appointmentId])
+  @@index([medicalRecordId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}

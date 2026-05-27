@@ -1,0 +1,33 @@
+// ============================================================================
+// Ficheiros (MinIO)
+// ============================================================================
+
+/// Objeto binário no armazenamento; cada `File` pode ser referenciado por no máximo um `Document`.
+model File {
+  id           String   @id @default(cuid())
+  originalName String
+  fileName     String   @unique
+  type         FileType
+  size         Int
+  mimeType     String
+  url          String   @unique
+  description  String?
+
+  companyId      String?
+  company        Company?  @relation("CompanyFiles", fields: [companyId], references: [id])
+  uploadedBy     String?
+  uploadedByUser User?     @relation("UserFiles", fields: [uploadedBy], references: [id])
+  document       Document? @relation("DocumentFile")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([uploadedBy])
+  @@index([type])
+  @@index([fileName])
+  @@index([url])
+  @@index([createdAt])
+  @@index([deletedAt])
+}

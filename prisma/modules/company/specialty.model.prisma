@@ -1,0 +1,18 @@
+/// Catálogo de especialidades (`adminCatalogSpecialties`). `companyId` null = catálogo partilhado/plataforma.
+model Specialty {
+  id        String   @id @default(cuid())
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  name   String
+  status CatalogItemStatus @default(ACTIVE)
+
+  services Service[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([status])
+}

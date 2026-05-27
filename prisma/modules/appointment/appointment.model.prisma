@@ -1,0 +1,44 @@
+// ============================================================================
+// Consultas
+// ============================================================================
+
+/// Consulta agendada entre um paciente e um profissional. Filhos: documentos clínicos e pagamentos.
+model Appointment {
+  id String @id @default(cuid())
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  patientId String
+  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+
+  professionalId String
+  professional   User   @relation("ProfessionalAppointments", fields: [professionalId], references: [id], onDelete: Cascade)
+
+  /// Instantâneo único da consulta (substitui `date` + `time` string do frontend na persistência).
+  startsAt DateTime
+
+  type AppointmentType @default(PRESENCIAL)
+
+  status AppointmentStatus @default(SCHEDULED)
+
+  remarcationCount Int     @default(0)
+  depositPaid      Boolean @default(false)
+  depositAmount    Decimal @default(0) @db.Decimal(12, 2)
+  notes            String? @db.Text
+
+  documents Document[] @relation("AppointmentDocuments")
+  payments  Payment[]
+  charges   Charge[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([patientId])
+  @@index([professionalId])
+  @@index([startsAt])
+  @@index([status])
+  @@index([deletedAt])
+}

@@ -1,0 +1,15 @@
+/// Lembretes da agenda do profissional (`ScheduleReminder` no frontend).
+model ScheduleReminder {
+  id                 String @id @default(cuid())
+  professionalUserId String
+  professional       User   @relation(fields: [professionalUserId], references: [id], onDelete: Cascade)
+
+  title    String
+  remindAt DateTime
+  note     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([professionalUserId])
+  @@index([remindAt])
+}

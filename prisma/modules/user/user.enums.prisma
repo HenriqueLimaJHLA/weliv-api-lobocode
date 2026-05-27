@@ -1,0 +1,24 @@
+// --- Papéis e estados base (auth / multi-tenant) ---
+
+/// Papel do utilizador na plataforma (JWT + CASL + UI).
+enum Roles {
+  SYSTEM_ADMIN
+  ADMIN
+  PATIENT
+  PROFESSIONAL
+}
+
+/// Ciclo de vida da conta (login, convites, bloqueios).
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  BLOCKED
+}
+
+/// Estado operacional do paciente nas listagens admin (`PatientRow.status`).
+enum PatientCareStatus {
+  ACTIVE
+  INACTIVE
+  NEEDS_ATTENTION
+}

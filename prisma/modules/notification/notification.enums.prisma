@@ -1,0 +1,26 @@
+// --- Notificações in-app (alinhado ao frontend: tipo + actionUrl) ---
+
+/// Modo de formação do grupo de notificação.
+enum NotificationGroupType {
+  ROLE
+  SECTOR
+  CUSTOM
+}
+
+/// Tipo de alvo de uma notificação em campanha (utilizador, papel, grupo, etc.).
+enum NotificationTargetType {
+  USER
+  ROLE
+  GROUP
+  COMPANY
+  CUSTOM
+}
+
+/// Categorias usadas no app paciente/profissional (`Notification.type` no React).
+enum AppNotificationCategory {
+  APPOINTMENT
+  PAYMENT
+  DOCUMENT
+  REMINDER
+  WAITING_LIST
+}
