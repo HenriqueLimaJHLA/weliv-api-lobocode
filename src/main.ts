@@ -5,6 +5,7 @@ import { CustomLoggerService } from './shared/common/logger/logger.service';
 import { MetricsInterceptor } from './shared/common/interceptors/metrics.interceptor';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { runSeed } from 'prisma/seed';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   try {
@@ -67,6 +68,16 @@ async function bootstrap() {
 
     app.useGlobalInterceptors(new MetricsInterceptor());
 
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Weliv API')
+      .setDescription('Documentacao da API Weliv')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api', app, swaggerDocument);
+
     const port = process.env.PORT ?? 30100;  // weliv: bloco 30xxx
     await app.listen(port);
 
@@ -85,6 +96,10 @@ async function bootstrap() {
     );
     logger.log(
       `📈 Métricas disponíveis em http://localhost:${port}/metrics`,
+      'Bootstrap',
+    );
+    logger.log(
+      `📚 Swagger disponível em http://localhost:${port}/api`,
       'Bootstrap',
     );
   } catch (error) {

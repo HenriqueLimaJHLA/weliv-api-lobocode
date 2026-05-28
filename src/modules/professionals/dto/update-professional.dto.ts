@@ -3,6 +3,18 @@ import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, Min } from 'class-v
 export class UpdateProfessionalDto {
   @IsOptional()
   @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  cpf?: string;
+
+  @IsOptional()
+  @IsString()
   professionalTitle?: string;
 
   @IsOptional()
@@ -36,7 +48,15 @@ export class UpdateProfessionalDto {
 
   @IsOptional()
   @IsString()
+  cnpj?: string;
+
+  @IsOptional()
+  @IsString()
   professionalAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
 
   @IsOptional()
   @IsString()

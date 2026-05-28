@@ -5,11 +5,13 @@ import { PrismaService } from 'src/shared/prisma/prisma.service';
 import { TenantService } from 'src/shared/tenant/tenant.service';
 import { NotFoundError, UnauthorizedError, ValidationError } from 'src/shared/common/errors';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
+import { UserValidator } from '../users/validators/user.validator';
 
 const PROFESSIONAL_SELECT: Prisma.UserSelect = {
   id: true,
   name: true,
   email: true,
+  cpf: true,
   phone: true,
   avatarUrl: true,
   role: true,
@@ -26,6 +28,8 @@ const PROFESSIONAL_SELECT: Prisma.UserSelect = {
   remarcationLimit: true,
   waitingListEnabled: true,
   depositPercentage: true,
+  professionalCnpj: true,
+  professionalAddress: true,
   company: { select: { id: true, name: true } },
 };
 
@@ -34,6 +38,7 @@ export class ProfessionalsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenantService: TenantService,
+    private readonly userValidator: UserValidator,
     @Optional() @Inject(REQUEST) private readonly request: any,
   ) {}
 
@@ -68,7 +73,7 @@ export class ProfessionalsService {
   async buscarPorId(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id }, select: PROFESSIONAL_SELECT });
     if (!user || user.role !== Roles.PROFESSIONAL) throw new NotFoundError('Professional', id, 'id');
-    return { data: user };
+    return { data: this.mapProfileContract(user) };
   }
 
   // ============================================================================
@@ -79,15 +84,29 @@ export class ProfessionalsService {
     const userId = this.extrairUserId();
     const user = await this.prisma.user.findUnique({ where: { id: userId }, select: PROFESSIONAL_SELECT });
     if (!user) throw new NotFoundError('User', userId, 'id');
-    return { data: user };
+    return { data: this.mapProfileContract(user) };
   }
 
   async atualizarMeuPerfil(dto: UpdateProfessionalDto) {
     const userId = this.extrairUserId();
+    const normalizedEmail = dto.email !== undefined ? String(dto.email).trim().toLowerCase() : undefined;
+    const cnpj = dto.cnpj ?? dto.professionalCnpj;
+    const address = dto.address ?? dto.professionalAddress;
+
+    if (normalizedEmail !== undefined) {
+      await this.userValidator.validarSeEmailEhUnico(normalizedEmail, userId);
+      await this.userValidator.validarSeLoginEhUnico(normalizedEmail, userId);
+    }
+    if (dto.cpf !== undefined) {
+      await this.userValidator.validarSeCpfEhUnico(dto.cpf, userId);
+    }
 
     const data = await this.prisma.user.update({
       where: { id: userId },
       data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(normalizedEmail !== undefined && { email: normalizedEmail, login: normalizedEmail }),
+        ...(dto.cpf !== undefined && { cpf: dto.cpf }),
         ...(dto.professionalTitle !== undefined && { professionalTitle: dto.professionalTitle }),
         ...(dto.biography !== undefined && { biography: dto.biography }),
         ...(dto.registrationNumber !== undefined && { registrationNumber: dto.registrationNumber }),
@@ -95,15 +114,15 @@ export class ProfessionalsService {
         ...(dto.consultationPrice !== undefined && { consultationPrice: dto.consultationPrice }),
         ...(dto.acceptsInsurance !== undefined && { acceptsInsurance: dto.acceptsInsurance }),
         ...(dto.insurances !== undefined && { insurances: dto.insurances }),
-        ...(dto.professionalCnpj !== undefined && { professionalCnpj: dto.professionalCnpj }),
-        ...(dto.professionalAddress !== undefined && { professionalAddress: dto.professionalAddress }),
+        ...(cnpj !== undefined && { professionalCnpj: cnpj }),
+        ...(address !== undefined && { professionalAddress: address }),
         ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
       },
       select: PROFESSIONAL_SELECT,
     });
 
-    return { data };
+    return { data: this.mapProfileContract(data) };
   }
 
   // ============================================================================
@@ -124,7 +143,7 @@ export class ProfessionalsService {
       this.prisma.user.count({ where }),
     ]);
 
-    return { data, pagination: this.paginar(page, limit, total) };
+    return { data: data.map((item) => this.mapProfileContract(item)), pagination: this.paginar(page, limit, total) };
   }
 
   // ============================================================================
@@ -152,5 +171,15 @@ export class ProfessionalsService {
   private paginar(page: number, limit: number, total: number) {
     const totalPages = Math.ceil(total / limit);
     return { page, limit, total, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 };
+  }
+
+  private mapProfileContract<T extends { professionalCnpj?: string | null; professionalAddress?: string | null }>(
+    data: T,
+  ): T & { cnpj: string | null; address: string | null } {
+    return {
+      ...data,
+      cnpj: data.professionalCnpj ?? null,
+      address: data.professionalAddress ?? null,
+    };
   }
 }
