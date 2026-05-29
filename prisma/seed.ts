@@ -10,27 +10,19 @@ const hashPassword = async (password: string) => {
 
 export async function runSeed() {
     try {
-        const existingCompany = await prisma.company.findFirst({
-            where: {
+        const company = await prisma.company.upsert({
+            where: { id: 'seed-company-weliv' },
+            update: {},
+            create: {
+                id: 'seed-company-weliv',
                 name: 'Weliv',
             },
         });
 
-        if (existingCompany) {
-            console.log('Company already exists:', existingCompany.name);
-            return;
-        }
+        console.log('Company upserted:', company.name);
 
-        const company = await prisma.company.create({
-            data: {
-                name: 'Weliv',
-            },
-        });
-
-        console.log('Company created:', company.name);
-
-        const userAdmin = await prisma.user.create({
-            data: {
+        const users = [
+            {
                 email: 'admin@weliv.com',
                 login: 'adminWeliv',
                 name: 'Admin Weliv',
@@ -40,10 +32,17 @@ export async function runSeed() {
                 cpf: '000.000.000-00',
                 companyId: company.id,
             },
-        });
-
-        const userProfessional = await prisma.user.create({
-            data: {
+            {
+                email: 'gestor@weliv.com',
+                login: 'gestorWeliv',
+                name: 'Gestor Clínica Weliv',
+                password: await hashPassword('GestorWeliv123'),
+                role: Roles.ADMIN,
+                status: UserStatus.ACTIVE,
+                cpf: '999.888.777-66',
+                companyId: company.id,
+            },
+            {
                 email: 'ana.silva@clinica.com',
                 login: 'ana.silva@clinica.com',
                 name: 'Ana Silva',
@@ -53,10 +52,7 @@ export async function runSeed() {
                 cpf: '222.333.444-55',
                 companyId: company.id,
             },
-        });
-
-        const userPatient = await prisma.user.create({
-            data: {
+            {
                 email: 'joao.santos@email.com',
                 login: 'joao.santos@email.com',
                 name: 'João Santos',
@@ -64,13 +60,27 @@ export async function runSeed() {
                 role: Roles.PATIENT,
                 status: UserStatus.ACTIVE,
                 cpf: '111.222.333-44',
+                companyId: null,
             },
-        });
+        ];
 
-        console.log('User Admin created:', userAdmin.email);
-        console.log('User Professional created:', userProfessional.email);
-        console.log('User Patient created:', userPatient.email);
+        for (const user of users) {
+            const { companyId, ...data } = user;
+            const created = await prisma.user.upsert({
+                where: { login: user.login },
+                update: {},
+                create: {
+                    ...data,
+                    ...(companyId ? { companyId } : {}),
+                },
+            });
+            console.log(`User upserted [${created.role}]:`, created.email);
+        }
     } catch (error) {
-        console.error('Error creating user:', error);
+        console.error('Seed error:', error);
+    } finally {
+        await prisma.$disconnect();
     }
-};
+}
+
+runSeed();
