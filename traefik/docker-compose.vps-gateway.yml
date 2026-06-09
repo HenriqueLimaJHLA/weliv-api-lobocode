@@ -1,0 +1,36 @@
+# Traefik — ACME via TLS-ALPN-01 (porta 443). Melhor que HTTP-01 quando a 80 está bloqueada na VPS.
+# Variáveis: traefik/.env.gateway (ver .env.gateway.example).
+name: ${VPS_GATEWAY_PROJECT_NAME}
+
+services:
+  traefik:
+    image: traefik:${TRAEFIK_IMAGE_TAG}
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.${TRAEFIK_CERT_RESOLVER}.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.${TRAEFIK_CERT_RESOLVER}.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.${TRAEFIK_CERT_RESOLVER}.acme.caserver=https://acme-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.${TRAEFIK_CERT_RESOLVER}.acme.tlschallenge=true
+      - --api.dashboard=false
+      - --log.level=${TRAEFIK_LOG_LEVEL}
+    ports:
+      - "${TRAEFIK_PUBLISH_HTTP}:80"
+      - "${TRAEFIK_PUBLISH_HTTPS}:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - edge
+
+volumes:
+  traefik_letsencrypt:
+    name: ${TRAEFIK_LETSENCRYPT_VOLUME_NAME}
+
+networks:
+  edge:
+    name: ${TRAEFIK_NETWORK}
+    external: true

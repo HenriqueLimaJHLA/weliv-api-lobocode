@@ -1,0 +1,116 @@
+# 📦 Products Module Specification
+# Exemplo de especificação para o módulo Products
+
+domain: products
+entity: Product
+description: Gestão de produtos da empresa
+
+# ===== CAMPOS =====
+fields:
+  - name: name
+    type: string
+    required: true
+    minLength: 2
+    maxLength: 100
+    description: Nome do produto
+
+  - name: description
+    type: text
+    required: false
+    maxLength: 500
+    description: Descrição detalhada
+
+  - name: sku
+    type: string
+    required: true
+    unique: true
+    minLength: 3
+    maxLength: 50
+    description: Código SKU único
+
+  - name: price
+    type: decimal
+    required: true
+    min: 0
+    description: Preço de venda
+
+  - name: costPrice
+    type: decimal
+    required: false
+    min: 0
+    description: Preço de custo
+
+  - name: stockQuantity
+    type: int
+    required: true
+    min: 0
+    default: 0
+    description: Quantidade em estoque
+
+  - name: minStockLevel
+    type: int
+    required: false
+    min: 0
+    default: 5
+    description: Alerta de estoque mínimo
+
+  - name: status
+    type: enum
+    values: [DRAFT, ACTIVE, INACTIVE, DISCONTINUED]
+    required: true
+    default: DRAFT
+    description: Status do produto
+
+  - name: category
+    type: enum
+    values: [ELECTRONICS, CLOTHING, FOOD, BOOKS, HOME, OTHER]
+    required: true
+    description: Categoria
+
+  - name: imageUrl
+    type: string
+    required: false
+    description: URL da imagem
+
+  - name: weight
+    type: decimal
+    required: false
+    min: 0
+    description: Peso em kg
+
+  - name: dimensions
+    type: string
+    required: false
+    description: Dimensões (AxLxP)
+
+# ===== RELACIONAMENTOS =====
+relationships:
+  - type: many-to-one
+    entity: Category
+    required: true
+    onDelete: Restrict
+    description: Categoria do produto
+
+# ===== FEATURES =====
+features:
+  - CRUD
+  - stats
+  - by-status
+  - by-code
+
+# ===== ACESSO =====
+access:
+  user: read
+  admin: full
+
+# ===== CAMADAS =====
+layers:
+  - administrator
+
+layerMode: standard
+
+# ===== NOTIFICAÇÕES =====
+notifications:
+  onCreate: true
+  onUpdate: true
+  onDelete: false

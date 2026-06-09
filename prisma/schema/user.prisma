@@ -1,0 +1,100 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// User - Usuários do Sistema
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum Roles {
+  USER
+  ADMIN
+  SYSTEM_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id               String     @id @default(cuid())
+  name             String
+  email            String     @unique
+  password         String
+  role             Roles      @default(USER)
+  status           UserStatus @default(ACTIVE)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PERFIL
+  // ═══════════════════════════════════════════════════════════════════════════
+  profilePicture   String?
+  phone            String?
+  cpf              String?    @unique
+  birthDate        DateTime?
+  gender           String?
+  nationality      String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENDEREÇO
+  // ═══════════════════════════════════════════════════════════════════════════
+  address          String?
+  addressNumber    String?
+  addressComplement String?
+  neighborhood     String?
+  city             String?
+  state            String?
+  zipCode          String?
+  country          String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DADOS PROFISSIONAIS
+  // ═══════════════════════════════════════════════════════════════════════════
+  jobTitle         String?
+  department       String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURAÇÕES
+  // ═══════════════════════════════════════════════════════════════════════════
+  preferences      Json?
+  notificationSettings Json?
+  language         String?    @default("pt-BR")
+  timezone         String?    @default("America/Sao_Paulo")
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUTENTICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  emailVerified    Boolean    @default(false)
+  phoneVerified    Boolean    @default(false)
+  twoFactorEnabled Boolean    @default(false)
+  twoFactorSecret  String?
+  lastLoginAt      DateTime?
+  loginAttempts    Int        @default(0)
+  lockedUntil      DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTO
+  // ═══════════════════════════════════════════════════════════════════════════
+  company          Company?   @relation(fields: [companyId], references: [id])
+  companyId        String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([email])
+  @@index([cpf])
+  @@index([status])
+  @@index([role])
+  @@index([companyId])
+  @@index([deletedAt])
+  @@index([phone])
+
+  @@map("users")
+}

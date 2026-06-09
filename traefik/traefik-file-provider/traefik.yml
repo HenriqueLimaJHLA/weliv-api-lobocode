@@ -1,0 +1,38 @@
+# Traefik: configuração estática (SSL Let's Encrypt + Docker provider).
+# Usado apenas por traefik/docker-compose.traefik-file-provider.yml — não altera o gateway padrão.
+# Variáveis no container: LETSENCRYPT_EMAIL, TRAEFIK_NETWORK
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: INFO
+
+api:
+  dashboard: false
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entrypoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ${LETSENCRYPT_EMAIL}
+      storage: /letsencrypt/acme.json
+      tlsChallenge: {}
+
+providers:
+  docker:
+    endpoint: unix:///var/run/docker.sock
+    exposedByDefault: false
+    network: ${TRAEFIK_NETWORK}

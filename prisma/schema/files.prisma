@@ -1,0 +1,30 @@
+enum FileType {
+  PROFILE_IMAGE
+  SERVICE_IMAGE
+  DOCUMENT
+  OTHER
+}
+
+model File {
+  id           String       @id @default(cuid())
+  originalName String
+  fileName     String       @unique
+  type         FileType
+  size         Int
+  mimeType     String
+  url          String       @unique
+  description  String?
+  uploadedBy   String?
+  companyId    String
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@index([uploadedBy])
+  @@index([type])
+  @@index([fileName])
+  @@index([companyId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}

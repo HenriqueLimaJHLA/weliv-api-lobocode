@@ -1,0 +1,101 @@
+# 📋 Tasks Module Specification
+# Sistema de tarefas para acompanhamento de atividades
+
+domain: tasks
+entity: Task
+description: Tarefas para acompanhamento de atividades
+
+# ===== CAMPOS =====
+fields:
+  - name: title
+    type: string
+    required: true
+    minLength: 3
+    maxLength: 200
+    description: Título da tarefa
+
+  - name: description
+    type: text
+    required: false
+    maxLength: 1000
+    description: Descrição detalhada
+
+  - name: priority
+    type: enum
+    values: [LOW, MEDIUM, HIGH, URGENT]
+    required: true
+    default: MEDIUM
+    description: Prioridade
+
+  - name: status
+    type: enum
+    values: [TODO, IN_PROGRESS, REVIEW, DONE, CANCELLED]
+    required: true
+    default: TODO
+    description: Status da tarefa
+
+  - name: dueDate
+    type: datetime
+    required: false
+    description: Data de vencimento
+
+  - name: completedAt
+    type: datetime
+    required: false
+    description: Data de conclusão
+
+  - name: estimatedHours
+    type: decimal
+    required: false
+    min: 0
+    description: Horas estimadas
+
+  - name: actualHours
+    type: decimal
+    required: false
+    min: 0
+    description: Horas reais gastas
+
+# ===== RELACIONAMENTOS =====
+relationships:
+  - type: many-to-one
+    entity: User
+    required: true
+    onDelete: Cascade
+    description: Responsável pela tarefa
+
+  - type: many-to-one
+    entity: Project
+    required: false
+    onDelete: SetNull
+    description: Projeto relacionado
+
+# ===== FEATURES =====
+features:
+  - CRUD
+  - stats
+  - by-status
+
+# ===== ACESSO =====
+access:
+  user:
+    create: true
+    read: true
+    update: true
+    delete: false
+  admin: full
+
+# ===== CAMADAS =====
+layers:
+  - user
+  - administrator
+
+layerMode:
+  user: standard
+  administrator: standard
+
+# ===== NOTIFICAÇÕES =====
+notifications:
+  onCreate: true
+  onUpdate: true
+  onDelete: false

@@ -1,0 +1,120 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// Company - Entidade Raiz de Multi-Tenancy
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum CompanyStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  TRIAL
+  SUSPENDED
+  BLOCKED
+  CANCELLED
+}
+
+model Company {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id                       String        @id @default(cuid())
+  name                     String
+  tradeName                String?       @db.VarChar(100)
+  legalName                String?       @db.VarChar(150)
+  cnpj                     String?       @unique
+  stateRegistration        String?
+  municipalRegistration    String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONTATO
+  // ═══════════════════════════════════════════════════════════════════════════
+  contactEmail             String?
+  billingEmail             String?
+  commercialEmail          String?
+  contactPhone             String?
+  whatsapp                 String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENDEREÇO
+  // ═══════════════════════════════════════════════════════════════════════════
+  address                  String?
+  addressNumber            String?
+  addressComplement        String?
+  neighborhood             String?
+  city                     String?
+  state                    String?       @db.VarChar(2)
+  country                  String?       @default("Brasil")
+  zipCode                  String?
+  latitude                 Float?
+  longitude                Float?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURAÇÕES
+  // ═══════════════════════════════════════════════════════════════════════════
+  status                   CompanyStatus @default(PENDING)
+  timezone                 String?       @default("America/Sao_Paulo")
+  logo                     String?
+  secondaryLogo            String?
+  favicon                  String?
+  primaryColor             String?
+  secondaryColor           String?
+  theme                    String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DADOS DA EMPRESA
+  // ═══════════════════════════════════════════════════════════════════════════
+  website                  String?
+  segment                  String?
+  companySize              String?
+  foundedAt                DateTime?
+  employeeCount            Int?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DADOS BANCÁRIOS / PAGAMENTO
+  // ═══════════════════════════════════════════════════════════════════════════
+  payoutPixKey             String?
+  payoutPixKeyType         String?
+  payoutBankCode           String?
+  payoutBankAgency         String?
+  payoutBankAccount        String?
+  payoutBankAccountDigit   String?
+  payoutBankOwnerName      String?
+  payoutBankCpfCnpj        String?
+  payoutBankAccountType    String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURAÇÕES EXTRAS (JSON)
+  // ═══════════════════════════════════════════════════════════════════════════
+  openingHours             Json?
+  businessDays             Json?
+  defaultSla              Int?
+  settings                 Json?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  users                    User[]
+  files                    File[]
+  notifications            Notification[]
+  notificationTemplates    NotificationTemplate[]
+  userNotificationPrefs UserNotificationPreference[]
+  deviceTokens             DeviceToken[]
+  settingConfigs           Setting[]
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+  deletedAt                DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([cnpj])
+  @@index([deletedAt])
+  @@index([status])
+  @@index([city])
+  @@index([state])
+
+  @@map("companies")
+}

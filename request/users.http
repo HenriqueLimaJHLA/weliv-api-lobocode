@@ -1,0 +1,56 @@
+### Users — template base (UniversalController + rota extra)
+@baseUrl = http://localhost:3000
+@contentType = application/json
+@accessToken =
+@userId =
+
+### Listar com paginação (ADMIN / SYSTEM_ADMIN)
+GET {{baseUrl}}/users?page=1&limit=10
+Authorization: Bearer {{accessToken}}
+
+### Listar todos
+GET {{baseUrl}}/users/all
+Authorization: Bearer {{accessToken}}
+
+### Buscar por id
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{accessToken}}
+
+### Criar usuário
+### Ajuste role/status ao enum Prisma (ex.: ADMIN, USER, SYSTEM_ADMIN, …)
+POST {{baseUrl}}/users
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Usuário Teste",
+  "email": "usuario.teste@exemplo.com",
+  "password": "SenhaSegura1@",
+  "role": "USER",
+  "status": "ACTIVE"
+}
+
+### Atualizar usuário
+PATCH {{baseUrl}}/users/{{userId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "phone": "11999998888"
+}
+
+### Desativar
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{accessToken}}
+
+### Reativar
+POST {{baseUrl}}/users/{{userId}}/restore
+Authorization: Bearer {{accessToken}}
+
+### Busca por nome
+GET {{baseUrl}}/users/search/name?name=Teste
+Authorization: Bearer {{accessToken}}
+
+### Métricas (Universal)
+GET {{baseUrl}}/users/metrics
+Authorization: Bearer {{accessToken}}

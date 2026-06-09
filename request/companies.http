@@ -1,0 +1,96 @@
+### Companies — admin + user (COMPLEX)
+@baseUrl = http://localhost:3000
+@contentType = application/json
+@accessToken =
+@companyId =
+
+### ── Admin: CRUD universal ──
+
+### Listar com paginação
+GET {{baseUrl}}/admin/companies?page=1&limit=10
+Authorization: Bearer {{accessToken}}
+
+### Listar todos
+GET {{baseUrl}}/admin/companies/all
+Authorization: Bearer {{accessToken}}
+
+### Buscar por id
+GET {{baseUrl}}/admin/companies/{{companyId}}
+Authorization: Bearer {{accessToken}}
+
+### Criar empresa
+POST {{baseUrl}}/admin/companies
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Empresa Exemplo",
+  "tradeName": "Exemplo LTDA",
+  "cnpj": "11.222.333/0001-81",
+  "contactEmail": "contato@exemplo.com",
+  "city": "São Paulo",
+  "state": "SP"
+}
+
+### Atualizar empresa
+PATCH {{baseUrl}}/admin/companies/{{companyId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Empresa Exemplo Atualizada"
+}
+
+### Alterar status
+PATCH {{baseUrl}}/admin/companies/{{companyId}}/status
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "status": "ACTIVE",
+  "reason": "Aprovação manual"
+}
+
+### Desativar (soft delete)
+DELETE {{baseUrl}}/admin/companies/{{companyId}}
+Authorization: Bearer {{accessToken}}
+
+### Reativar
+POST {{baseUrl}}/admin/companies/{{companyId}}/restore
+Authorization: Bearer {{accessToken}}
+
+### Admin — lista com filtros
+GET {{baseUrl}}/admin/companies/list?page=1&limit=20&search=Exemplo
+Authorization: Bearer {{accessToken}}
+
+### Admin — detalhe
+GET {{baseUrl}}/admin/companies/detail/{{companyId}}
+Authorization: Bearer {{accessToken}}
+
+### Admin — estatísticas
+GET {{baseUrl}}/admin/companies/stats
+Authorization: Bearer {{accessToken}}
+
+### Métricas Prometheus
+GET {{baseUrl}}/admin/companies/metrics
+Authorization: Bearer {{accessToken}}
+
+### ── User: minha empresa ──
+
+### Minha empresa
+GET {{baseUrl}}/user/companies/me
+Authorization: Bearer {{accessToken}}
+
+### Atualizar minha empresa
+PUT {{baseUrl}}/user/companies/me
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "website": "https://exemplo.com",
+  "contactPhone": "11999999999"
+}
+
+### Dashboard da minha empresa
+GET {{baseUrl}}/user/companies/me/dashboard
+Authorization: Bearer {{accessToken}}

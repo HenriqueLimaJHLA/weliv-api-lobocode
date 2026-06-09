@@ -1,0 +1,55 @@
+# Backend + Traefik — variáveis apenas via .env (ver .env.example).
+name: ${COMPOSE_VPS_STACK_NAME}
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.prod
+    container_name: ${BACKEND_CONTAINER_NAME}
+    env_file:
+      - ../.env
+    expose:
+      - "${APP_PORT}"
+    environment:
+      - NODE_ENV=production
+      - PORT=${APP_PORT}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_CONTAINER_NAME}:5432/${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://${REDIS_CONTAINER_NAME}:6379
+      - MINIO_HOST=${MINIO_CONTAINER_NAME}
+      - MINIO_PORT=9000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK}
+      # HTTPS: só websecure — router único em web+websecure com tls costuma servir certificado interno (ERR_CERT_AUTHORITY_INVALID).
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api.rule=Host(`${APP_HOST}`)
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api.entrypoints=websecure
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api.service=${VPS_APP_PROJECT_NAME}-api
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api.tls=true
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER}
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api.tls.domains[0].main=${APP_HOST}
+      - traefik.http.services.${VPS_APP_PROJECT_NAME}-api.loadbalancer.server.port=${APP_PORT}
+      # HTTP → HTTPS (ACME no gateway usa TLS-ALPN na 443; /.well-known só atrapalha redirect se ainda usar HTTP-01).
+      - traefik.http.middlewares.${VPS_APP_PROJECT_NAME}-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.${VPS_APP_PROJECT_NAME}-https-redirect.redirectscheme.permanent=true
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api-http.rule=Host(`${APP_HOST}`)
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api-http.entrypoints=web
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api-http.middlewares=${VPS_APP_PROJECT_NAME}-https-redirect
+      - traefik.http.routers.${VPS_APP_PROJECT_NAME}-api-http.service=noop@internal
+    restart: unless-stopped
+    networks:
+      - stack
+      - edge
+
+networks:
+  stack:
+    name: ${DOCKER_NETWORK_NAME}
+    external: true
+  edge:
+    name: ${TRAEFIK_NETWORK}
+    external: true

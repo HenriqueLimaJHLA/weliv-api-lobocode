@@ -1,0 +1,7 @@
+### Dashboard — template base
+@baseUrl = http://localhost:3000
+@accessToken =
+
+### Estatísticas do painel (ADMIN / SYSTEM_ADMIN)
+GET {{baseUrl}}/dashboard/stats
+Authorization: Bearer {{accessToken}}

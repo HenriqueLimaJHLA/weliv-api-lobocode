@@ -1,0 +1,18 @@
+### App — template base
+### Variáveis
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### GET /
+GET {{baseUrl}}/
+
+### GET /health
+GET {{baseUrl}}/health
+
+### POST /test
+POST {{baseUrl}}/test
+Content-Type: {{contentType}}
+
+{
+  "ping": true
+}

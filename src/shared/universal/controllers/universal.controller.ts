@@ -1,0 +1,190 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpStatus,
+  HttpCode,
+  Query,
+  BadRequestException,
+  UseInterceptors,
+} from '@nestjs/common';
+import { RequiredRoles } from 'src/shared/auth/required-roles.decorator';
+import { Roles } from '@prisma/client';
+import { UniversalService } from '../services/universal.service';
+import { TenantInterceptor } from 'src/shared/tenant/tenant.interceptor';
+import { CaslInterceptor } from 'src/shared/casl/interceptors/casl.interceptor';
+
+@UseInterceptors(TenantInterceptor, CaslInterceptor)
+@Controller()
+export abstract class UniversalController<
+  DtoCreate,
+  DtoUpdate,
+  Service extends UniversalService<DtoCreate, DtoUpdate>,
+> {
+  private readonly metricsPrefix = this.normalizePrefix(
+    process.env.PROMETHEUS_METRICS_PREFIX || 'lobocode_',
+  );
+  private readonly prometheusBaseUrl =
+    process.env.PROMETHEUS_BASE_URL || 'http://localhost:9090';
+  private readonly grafanaBaseUrl = process.env.GRAFANA_BASE_URL || 'http://localhost:3000';
+
+  constructor(protected readonly service: Service) {}
+
+  // ============================================================================
+  // 📊 MÉTRICAS PROMETHEUS (NOVO)
+  // ============================================================================
+
+  @Get('metrics')
+  @RequiredRoles(Roles.SYSTEM_ADMIN, Roles.ADMIN)
+  async obterMetricas(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('entity') entity?: string,
+  ) {
+    // Query direto do Prometheus
+    const resolvedEntity = entity ?? (this.service as any).entityName;
+    const timeRange =
+      startDate && endDate
+        ? `[${this.calculateTimeRange(startDate, endDate)}]`
+        : '[1h]';
+
+    return this.getMetrics(resolvedEntity, timeRange);
+  }
+
+  // ============================================================================
+  // 🔍 BUSCA ESPECIALIZADA
+  // ============================================================================
+
+  @Get('search/name')
+  buscarPorNome(@Query('name') name: string) {
+    if (!name) {
+      throw new BadRequestException('Nome é obrigatório para a busca');
+    }
+    return this.service.buscarMuitosPorCampo('name', name);
+  }
+
+  @Get('search/field')
+  buscarPorCampo(@Query('field') field: string, @Query('value') value: string) {
+    if (!field || !value) {
+      throw new BadRequestException(
+        'Campo e valor são obrigatórios para a busca',
+      );
+    }
+    return this.service.buscarPorCampo(field, value);
+  }
+
+  // ============================================================================
+  // 📋 CRUD BÁSICO
+  // ============================================================================
+
+  @Get()
+  buscarComPaginacao(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.service.buscarComPaginacao(page, limit);
+  }
+
+  @Get('all')
+  buscarTodos() {
+    return this.service.buscarTodos();
+  }
+
+  @Get(':id')
+  buscarPorId(@Param('id') id: string) {
+    return this.service.buscarPorId(id);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  criar(@Body() createShiftDto: DtoCreate) {
+    return this.service.criar(createShiftDto);
+  }
+
+  @Patch(':id')
+  atualizar(@Param('id') id: string, @Body() updateShiftDto: DtoUpdate) {
+    return this.service.atualizar(id, updateShiftDto);
+  }
+
+  @Delete(':id')
+  desativar(@Param('id') id: string) {
+    return this.service.desativar(id);
+  }
+
+  @Post(':id/restore')
+  reativar(@Param('id') id: string) {
+    return this.service.reativar(id);
+  }
+
+  // ============================================================================
+  // 🔧 HELPER METHODS
+  // ============================================================================
+
+  private calculateTimeRange(startDate: string, endDate: string): string {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffHours =
+      Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+    if (diffHours <= 1) return '1h';
+    if (diffHours <= 24) return '24h';
+    if (diffHours <= 168) return '7d';
+    return '30d';
+  }
+
+  private getMetrics(entity: string, timeRange: string) {
+    const entityOperationsMetric = this.metricName('entity_operations_total');
+    const operationDurationMetric = this.metricName('operation_duration_seconds');
+    return {
+      // Contador total de operações
+      total_operations: {
+        query: `sum(${entityOperationsMetric}{entity="${entity}"})`,
+        prometheus_url: `${this.prometheusBaseUrl}/api/v1/query?query=sum(${entityOperationsMetric}{entity="${entity}"})`,
+      },
+
+      // Taxa de operações por minuto
+      operations_rate: {
+        query: `rate(${entityOperationsMetric}{entity="${entity}"}${timeRange})`,
+        prometheus_url: `${this.prometheusBaseUrl}/api/v1/query?query=rate(${entityOperationsMetric}{entity="${entity}"}${timeRange})`,
+      },
+
+      // Duração média das operações
+      avg_duration: {
+        query: `rate(${operationDurationMetric}_sum{entity="${entity}"}${timeRange}) / rate(${operationDurationMetric}_count{entity="${entity}"}${timeRange})`,
+        prometheus_url: `${this.prometheusBaseUrl}/api/v1/query?query=rate(${operationDurationMetric}_sum{entity="${entity}"}${timeRange})/rate(${operationDurationMetric}_count{entity="${entity}"}${timeRange})`,
+      },
+
+      // Operações por status
+      by_status: {
+        query: `sum(${entityOperationsMetric}{entity="${entity}"}) by (status)`,
+        prometheus_url: `${this.prometheusBaseUrl}/api/v1/query?query=sum(${entityOperationsMetric}{entity="${entity}"}) by (status)`,
+      },
+
+      // Operações por ação
+      by_action: {
+        query: `sum(${entityOperationsMetric}{entity="${entity}"}) by (action)`,
+        prometheus_url: `${this.prometheusBaseUrl}/api/v1/query?query=sum(${entityOperationsMetric}{entity="${entity}"}) by (action)`,
+      },
+
+      info: {
+        message: 'Métricas agora vêm do Prometheus',
+        grafana_dashboard: this.grafanaBaseUrl,
+        prometheus_ui: this.prometheusBaseUrl,
+      },
+    };
+  }
+
+  private normalizePrefix(prefix: string): string {
+    const cleaned = prefix.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    if (!cleaned) return 'lobocode_';
+    return cleaned.endsWith('_') ? cleaned : `${cleaned}_`;
+  }
+
+  private metricName(suffix: string): string {
+    return `${this.metricsPrefix}${suffix}`;
+  }
+}

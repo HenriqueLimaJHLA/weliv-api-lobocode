@@ -1,0 +1,16 @@
+export {
+  API_MESSAGES,
+  ENVIRONMENT_MESSAGES,
+  ERROR_MESSAGES,
+  LOG_MESSAGES,
+  MESSAGES,
+  METRICS_MESSAGES,
+  NOTIFICATION_MESSAGES,
+  SUCCESS_MESSAGES,
+  VALIDATION_MESSAGES,
+} from '../common/messages/messages.constants';
+
+export {
+  CORE_ERROR_MESSAGES,
+  CORE_VALIDATION_MESSAGES,
+} from './messages.core.config';

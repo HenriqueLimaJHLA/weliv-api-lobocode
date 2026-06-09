@@ -1,0 +1,29 @@
+### Files — template base (multipart e JSON)
+@baseUrl = http://localhost:3000
+@accessToken =
+@fileId =
+
+### Upload (campo "file" + query type obrigatório)
+### Ajuste o boundary se o cliente reclamar; ou use curl/Postman para arquivos grandes.
+POST {{baseUrl}}/files/upload?type=document&description=teste
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data; boundary=----restclientboundary
+
+------restclientboundary
+Content-Disposition: form-data; name="file"; filename="hello.txt"
+Content-Type: text/plain
+
+Hello template
+------restclientboundary--
+
+### Listar arquivos
+GET {{baseUrl}}/files?page=1&limit=20
+Authorization: Bearer {{accessToken}}
+
+### Obter por id
+GET {{baseUrl}}/files/{{fileId}}
+Authorization: Bearer {{accessToken}}
+
+### Remover
+DELETE {{baseUrl}}/files/{{fileId}}
+Authorization: Bearer {{accessToken}}

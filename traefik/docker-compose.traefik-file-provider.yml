@@ -1,0 +1,30 @@
+# Traefik (arquivo estático) — variáveis em traefik/.env.traefik-file-provider (ver .example).
+name: ${TRAEFIK_FILE_PROVIDER_PROJECT_NAME}
+
+services:
+  traefik:
+    image: traefik:${TRAEFIK_IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      TRAEFIK_NETWORK: ${TRAEFIK_NETWORK}
+    command:
+      - --configFile=/etc/traefik/traefik.yml
+    ports:
+      - "${TRAEFIK_PUBLISH_HTTP}:80"
+      - "${TRAEFIK_PUBLISH_HTTPS}:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_file_provider_letsencrypt:/letsencrypt
+      - ./traefik-file-provider/traefik.yml:/etc/traefik/traefik.yml:ro
+    networks:
+      - edge
+
+volumes:
+  traefik_file_provider_letsencrypt:
+    name: ${TRAEFIK_FILE_PROVIDER_VOLUME_NAME}
+
+networks:
+  edge:
+    name: ${TRAEFIK_NETWORK}
+    external: true

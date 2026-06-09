@@ -1,0 +1,153 @@
+### Auth — template base (AuthController @Controller('auth'))
+@baseUrl = http://localhost:3000
+@contentType = application/json
+@accessToken =
+@refreshToken =
+
+### Login genérico — # @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "login": "admin@templatelobocode.com",
+  "password": "Admin123@"
+}
+
+### Login app (apenas USER)
+POST {{baseUrl}}/auth/login/user
+Content-Type: {{contentType}}
+
+{
+  "login": "usuario@exemplo.com",
+  "password": "SenhaSegura1@"
+}
+
+### Login pro (ADMIN ou USER)
+POST {{baseUrl}}/auth/login/pro
+Content-Type: {{contentType}}
+
+{
+  "login": "profissional@exemplo.com",
+  "password": "SenhaSegura1@"
+}
+
+### Login admin (ADMIN ou SYSTEM_ADMIN)
+POST {{baseUrl}}/auth/login/admin
+Content-Type: {{contentType}}
+
+{
+  "login": "admin@templatelobocode.com",
+  "password": "Admin123@"
+}
+
+### Registro usuário comum
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "novo.usuario@exemplo.com",
+  "password": "SenhaSegura1@",
+  "name": "Novo Usuario",
+  "phone": "11999999999"
+}
+
+### Registro empresa + usuário ADMIN
+POST {{baseUrl}}/auth/register-company
+Content-Type: {{contentType}}
+
+{
+  "email": "empresa@exemplo.com",
+  "password": "SenhaSegura1@",
+  "name": "Responsável Legal",
+  "phone": "11988887777",
+  "businessName": "Minha Empresa LTDA",
+  "cnpj": "11222333000181",
+  "city": "São Paulo",
+  "state": "SP"
+}
+
+### Refresh token
+POST {{baseUrl}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Alterar senha (autenticado)
+POST {{baseUrl}}/auth/change-password
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "currentPassword": "SenhaAtual1@",
+  "newPassword": "NovaSenhaSegura1@"
+}
+
+### Logout (envia refresh token atual)
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Logout de todos os dispositivos
+POST {{baseUrl}}/auth/logout-all
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Esqueci a senha
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "email": "usuario@exemplo.com"
+}
+
+### Validar token de reset
+POST {{baseUrl}}/auth/validate-reset-token
+Content-Type: {{contentType}}
+
+{
+  "token": "cole-o-token-recebido-por-email"
+}
+
+### Redefinir senha (token + nova senha + confirmação)
+POST {{baseUrl}}/auth/reset-password
+Content-Type: {{contentType}}
+
+{
+  "token": "cole-o-token",
+  "newPassword": "NovaSenhaSegura1@",
+  "confirmPassword": "NovaSenhaSegura1@"
+}
+
+### Métricas de auth (autenticado)
+GET {{baseUrl}}/auth/metrics
+Authorization: Bearer {{accessToken}}
+
+### Métricas de segurança
+GET {{baseUrl}}/auth/security-metrics
+Authorization: Bearer {{accessToken}}
+
+### Métricas em tempo real
+GET {{baseUrl}}/auth/real-time-metrics
+Authorization: Bearer {{accessToken}}
+
+### Alertas de segurança
+GET {{baseUrl}}/auth/security-alerts
+Authorization: Bearer {{accessToken}}
+
+### Top usuários ativos
+GET {{baseUrl}}/auth/top-active-users?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Exportar métricas (ajuste datas)
+GET {{baseUrl}}/auth/export-metrics?startDate=2026-01-01&endDate=2026-12-31&format=json
+Authorization: Bearer {{accessToken}}

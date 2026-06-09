@@ -1,0 +1,406 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// Notifications - Sistema de Notificações Multi-Canal
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum NotificationType {
+  GENERAL
+  BOOKING
+  PAYMENT
+  REMINDER
+  PROMOTION
+  SYSTEM
+  SECURITY
+  SUPPORT
+  MARKETING
+  SOCIAL
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum ChannelStatus {
+  PENDING
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  BOUNCED
+  UNSUBSCRIBED
+}
+
+enum DeviceType {
+  IOS
+  ANDROID
+  WEB
+  DESKTOP
+}
+
+enum PushProvider {
+  FCM
+  APNS
+  WEB_PUSH
+}
+
+enum NotificationFrequency {
+  INSTANT
+  DAILY
+  WEEKLY
+  NONE
+}
+
+enum NotificationActionType {
+  NONE
+  DEEP_LINK
+  URL
+  SCREEN
+  CALL
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTIFICATION - Notificação Principal
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model Notification {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONTEÚDO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id          String              @id @default(cuid())
+  title       String
+  body        String              @db.Text
+  type        NotificationType    @default(GENERAL)
+  priority    NotificationPriority @default(NORMAL)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DADOS EXTRAS
+  // ═══════════════════════════════════════════════════════════════════════════
+  data        Json?
+  imageUrl    String?
+  actionUrl   String?
+  actionType  NotificationActionType?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AGENDAMENTO
+  // ═══════════════════════════════════════════════════════════════════════════
+  scheduledAt DateTime?
+  sentAt     DateTime?
+  expiresAt  DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  company           Company?              @relation(fields: [companyId], references: [id])
+  companyId         String?
+  recipients        NotificationRecipient[]
+  channels          NotificationChannelLog[]
+  notification      NotificationTemplate? @relation(fields: [templateId], references: [id])
+  templateId        String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([companyId])
+  @@index([type])
+  @@index([priority])
+  @@index([scheduledAt])
+  @@index([sentAt])
+  @@index([createdByUserId])
+  @@index([deletedAt])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTIFICATION RECIPIENT - Destinatários
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model NotificationRecipient {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id             String   @id @default(cuid())
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATUS
+  // ═══════════════════════════════════════════════════════════════════════════
+  isRead         Boolean  @default(false)
+  readAt         DateTime?
+  isDelivered    Boolean  @default(false)
+  deliveredAt    DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId String
+  userId         String
+  channels       NotificationChannelLog[]
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@unique([notificationId, userId])
+  @@index([userId])
+  @@index([notificationId])
+  @@index([isRead])
+  @@index([isDelivered])
+  @@index([deletedAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTIFICATION CHANNEL LOG - Log de Envio por Canal
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model NotificationChannelLog {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id               String       @id @default(cuid())
+  channel          NotificationChannel
+  provider         String?
+  providerMessageId String?
+  status           ChannelStatus @default(PENDING)
+  retryCount       Int          @default(0)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIMING
+  // ═══════════════════════════════════════════════════════════════════════════
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  failedAt     DateTime?
+  bouncedAt    DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ERRO
+  // ═══════════════════════════════════════════════════════════════════════════
+  failureReason String?
+  errorCode    String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CUSTO
+  // ═══════════════════════════════════════════════════════════════════════════
+  cost          Float?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  notification      Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId    String
+  recipient         NotificationRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId       String
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([notificationId])
+  @@index([recipientId])
+  @@index([channel])
+  @@index([status])
+  @@index([provider])
+  @@index([sentAt])
+  @@index([failedAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTIFICATION TEMPLATE - Templates de Notificação
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model NotificationTemplate {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id          String              @id @default(cuid())
+  name        String
+  code        String              @unique
+  channel     NotificationChannel
+  isActive    Boolean             @default(true)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONTEÚDO
+  // ═══════════════════════════════════════════════════════════════════════════
+  title       String?
+  body        String              @db.Text
+  subject     String?             @db.VarChar(255)
+  footer      String?
+  imageUrl    String?
+  actionText  String?
+  actionUrl   String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VARIÁVEIS
+  // ═══════════════════════════════════════════════════════════════════════════
+  variables   Json                @default("[]")
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURAÇÕES
+  // ═══════════════════════════════════════════════════════════════════════════
+  clickAction String?
+  iconUrl     String?
+  badgeCount  Int?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  company     Company?            @relation(fields: [companyId], references: [id])
+  companyId   String?
+  notifications Notification[]
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([companyId])
+  @@index([channel])
+  @@index([code])
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USER NOTIFICATION PREFERENCE - Preferências do Usuário
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model UserNotificationPreference {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id        String                 @id @default(cuid())
+  userId    String
+  channel   NotificationChannel
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURAÇÕES
+  // ═══════════════════════════════════════════════════════════════════════════
+  enabled   Boolean               @default(true)
+  frequency NotificationFrequency @default(INSTANT)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUIET HOURS
+  // ═══════════════════════════════════════════════════════════════════════════
+  quietHoursStart String?
+  quietHoursEnd   String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIPOS PERMITIDOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  notificationTypes Json @default("[]")
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@unique([userId, channel])
+  @@index([userId])
+  @@index([channel])
+  @@index([enabled])
+  @@index([companyId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEVICE TOKEN - Tokens de Dispositivo para Push
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model DeviceToken {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  id      String     @id @default(cuid())
+  userId  String
+  token   String
+  type    DeviceType
+  provider PushProvider @default(FCM)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATUS
+  // ═══════════════════════════════════════════════════════════════════════════
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INFO DO DISPOSITIVO
+  // ═══════════════════════════════════════════════════════════════════════════
+  deviceInfo  Json?
+  deviceName   String?
+  deviceModel String?
+  osVersion   String?
+  appVersion  String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@unique([userId, token, provider])
+  @@index([userId])
+  @@index([token])
+  @@index([type])
+  @@index([provider])
+  @@index([isActive])
+  @@index([companyId])
+  @@index([lastUsedAt])
+}

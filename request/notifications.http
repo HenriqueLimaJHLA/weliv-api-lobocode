@@ -1,0 +1,36 @@
+### Notifications — template base
+@baseUrl = http://localhost:3000
+@accessToken =
+@notificationId =
+
+### Minhas notificações
+GET {{baseUrl}}/notifications?page=1&limit=20&isRead=false
+Authorization: Bearer {{accessToken}}
+
+### Contagem não lidas
+GET {{baseUrl}}/notifications/unread-count
+Authorization: Bearer {{accessToken}}
+
+### Exportar JSON
+GET {{baseUrl}}/notifications/export?format=json
+Authorization: Bearer {{accessToken}}
+
+### Marcar todas como lidas
+PUT {{baseUrl}}/notifications/read-all
+Authorization: Bearer {{accessToken}}
+
+### Limpar todas
+DELETE {{baseUrl}}/notifications/clear-all
+Authorization: Bearer {{accessToken}}
+
+### Limpar apenas lidas
+DELETE {{baseUrl}}/notifications/clear-read
+Authorization: Bearer {{accessToken}}
+
+### Marcar uma como lida
+PUT {{baseUrl}}/notifications/{{notificationId}}/read
+Authorization: Bearer {{accessToken}}
+
+### Deletar uma notificação
+DELETE {{baseUrl}}/notifications/{{notificationId}}
+Authorization: Bearer {{accessToken}}
