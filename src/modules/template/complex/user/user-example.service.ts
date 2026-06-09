@@ -13,8 +13,6 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from 'src/shared/common/errors';
-import { NotificationHelper } from 'src/modules/infrastructure/notifications/notification.helper';
-import { ENTITY_TYPES } from 'src/modules/infrastructure/notifications/shared/notification.types';
 import { UserExampleContextService } from './services/user-example-context.service';
 import { CreateExampleDto, ExampleStatus } from './dto/create-example.dto';
 import { UpdateExampleDto } from './dto/update-example.dto';
@@ -36,9 +34,8 @@ export class UserExampleService extends UniversalService<
     queryService: UniversalQueryService,
     permissionService: UniversalPermissionService,
     metricsService: UniversalMetricsService,
-    @Optional() @Inject(REQUEST) request: any,
+    @Optional() @Inject(REQUEST) protected readonly request: any,
     private readonly userExampleContext: UserExampleContextService,
-    private readonly notificationHelper: NotificationHelper,
   ) {
     const { model, casl } = UserExampleService.entityConfig;
     super(
@@ -85,23 +82,7 @@ export class UserExampleService extends UniversalService<
   }
 
   protected async depoisDeCriar(entity: any): Promise<void> {
-    try {
-      const ownerId = entity.ownerId || entity.owner?.id;
-      if (!ownerId) return;
-      await this.notificationHelper.criar({
-        title: `Exemplo criado: ${entity.name}`,
-        message: `O registro "${entity.name}" foi criado.`,
-        userId: ownerId,
-        companyId: entity.companyId,
-        entityType: ENTITY_TYPES.SYSTEM,
-        entityId: entity.id,
-        priority: 'NORMAL',
-        recipients: [ownerId],
-        allowSelfNotification: true,
-      });
-    } catch (err) {
-      console.error('Erro ao criar notificação pós-criação de example:', err);
-    }
+    // TODO: Implementar notificação
   }
 
   protected async antesDeAtualizar(

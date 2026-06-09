@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
-import { EmailPayload, EmailProviderInterface, NotificationResult } from '../../common/interfaces/notification-provider.interface';
+import { EmailPayload, EmailProviderInterface, NotificationResult } from '../../../common/interfaces/notification-provider.interface';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROVIDER - SendGrid / SMTP

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SmsPayload, SmsProviderInterface, NotificationResult } from '../../common/interfaces/notification-provider.interface';
+import { SmsPayload, SmsProviderInterface, NotificationResult } from '../../../common/interfaces/notification-provider.interface';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROVIDER - Twilio SMS

@@ -2,7 +2,12 @@
 // INTERFACES - Provider de Notificações
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { NotificationChannel } from '../enums/notification.enums';
+import {
+  NotificationChannel,
+  NotificationType,
+  NotificationPriority,
+  NotificationActionType,
+} from '../enums/notification.enums';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // RESULT

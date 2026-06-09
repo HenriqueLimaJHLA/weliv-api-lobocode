@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { NotificationsModule } from './notifications/notifications.module';
+import { NotificationsCoreModule } from './notifications/notifications.module';
 import { NotificationsChannelsModule } from './channels/channels.module';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -8,11 +8,11 @@ import { NotificationsChannelsModule } from './channels/channels.module';
 
 @Module({
   imports: [
-    NotificationsModule,
+    NotificationsCoreModule,
     NotificationsChannelsModule,
   ],
   exports: [
-    NotificationsModule,
+    NotificationsCoreModule,
     NotificationsChannelsModule,
   ],
 })

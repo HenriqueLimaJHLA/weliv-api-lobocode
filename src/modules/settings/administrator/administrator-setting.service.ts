@@ -9,8 +9,6 @@ import {
   createEntityConfig,
 } from 'src/shared/universal';
 import { ForbiddenError, ConflictError, NotFoundError } from 'src/shared/common/errors';
-import { NotificationHelper } from 'src/modules/infrastructure/notifications/notification.helper';
-import { ENTITY_TYPES } from 'src/modules/infrastructure/notifications/shared/notification.types';
 import { CreateSettingDto, SettingType } from './dto/create-setting.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
 
@@ -30,8 +28,8 @@ export class AdministratorSettingService extends UniversalService<
     queryService: UniversalQueryService,
     permissionService: UniversalPermissionService,
     metricsService: UniversalMetricsService,
-    @Optional() @Inject(REQUEST) private readonly request: any,
-    private readonly notificationHelper: NotificationHelper,
+    @Optional() @Inject(REQUEST) protected readonly request: any,
+    
   ) {
     const { model, casl } = AdministratorSettingService.entityConfig;
     super(

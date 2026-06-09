@@ -13,8 +13,6 @@ import { SecurityService } from './security.service';
 import { AuthValidator } from '../validators/auth.validator';
 import { MessagesService } from '../../common/messages/messages.service';
 import { Request } from 'express';
-import { UserRepository } from '../../../modules/users/repositories/user.repository';
-import { UserValidator } from '../../../modules/users/validators/user.validator';
 import { Roles } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -29,8 +27,6 @@ export class LoginService {
     private readonly auditService: AuditService,
     private readonly securityService: SecurityService,
     private readonly authValidator: AuthValidator,
-    private readonly userRepository: UserRepository,
-    private readonly userValidator: UserValidator,
     private readonly prisma: PrismaService,
     private readonly messagesService: MessagesService,
   ) {}

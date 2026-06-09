@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { WhatsAppPayload, WhatsAppProviderInterface, NotificationResult } from '../../common/interfaces/notification-provider.interface';
+import { WhatsAppPayload, WhatsAppProviderInterface, NotificationResult } from '../../../common/interfaces/notification-provider.interface';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROVIDER - Z-API WhatsApp

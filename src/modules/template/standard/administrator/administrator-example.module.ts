@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { AdministratorExampleService } from './administrator-example.service';
 import { AdministratorExampleController } from './administrator-example.controller';
 import { UniversalModule } from 'src/shared/universal/universal.module';
-import { NotificationModule } from 'src/modules/infrastructure/notifications/notification.module';
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 
 @Module({
   imports: [
     UniversalModule,
-    NotificationModule,
+    NotificationsModule,
   ],
   controllers: [AdministratorExampleController],
   providers: [AdministratorExampleService],

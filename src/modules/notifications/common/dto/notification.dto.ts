@@ -9,8 +9,6 @@ import {
   MinLength,
   MaxLength,
   IsUUID,
-  IsEmail,
-  Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
@@ -18,6 +16,8 @@ import {
   NotificationPriority,
   NotificationChannel,
   NotificationActionType,
+  NotificationFrequency,
+  DeviceType,
 } from '../enums/notification.enums';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -29,6 +29,8 @@ export {
   NotificationPriority,
   NotificationChannel,
   NotificationActionType,
+  NotificationFrequency,
+  DeviceType,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -130,8 +132,6 @@ export class CreateNotificationDto {
   @IsObject()
   @IsOptional()
   templateVariables?: Record<string, string>;
-
-  // NÃO INCLUIR: id, sentAt, createdAt, updatedAt, deletedAt, createdByUserId
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -299,13 +299,6 @@ export class UpdatePreferenceDto {
   notificationTypes?: string[];
 }
 
-export class NotificationFrequency {
-  INSTANT = 'INSTANT';
-  DAILY = 'DAILY';
-  WEEKLY = 'WEEKLY';
-  NONE = 'NONE';
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEVICE TOKEN DTO
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -323,13 +316,6 @@ export class RegisterDeviceDto {
   @IsObject()
   @IsOptional()
   deviceInfo?: Record<string, any>;
-}
-
-export class DeviceType {
-  IOS = 'IOS';
-  ANDROID = 'ANDROID';
-  WEB = 'WEB';
-  DESKTOP = 'DESKTOP';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

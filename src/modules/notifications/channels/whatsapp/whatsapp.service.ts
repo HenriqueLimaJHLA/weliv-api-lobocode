@@ -17,13 +17,13 @@ export class NotificationsWhatsAppService {
   ) {}
 
   async sendToUser(userId: string, message: string): Promise<NotificationResult> {
-    // Buscar WhatsApp do usuário (pode estar no campo phone ou whatsapp)
+    // Buscar WhatsApp do usuário (campo phone)
     const user = await this.prisma.user.findUnique({
       where: { id: userId, deletedAt: null },
-      select: { phone: true, whatsapp: true },
+      select: { phone: true },
     });
 
-    const phone = user?.whatsapp || user?.phone;
+    const phone = user?.phone;
 
     if (!phone) {
       return { success: false, error: 'User WhatsApp not found', provider: 'WHATSAPP' };
@@ -38,11 +38,11 @@ export class NotificationsWhatsAppService {
   async sendToUsers(userIds: string[], message: string): Promise<NotificationResult[]> {
     const users = await this.prisma.user.findMany({
       where: { id: { in: userIds }, deletedAt: null },
-      select: { phone: true, whatsapp: true },
+      select: { phone: true },
     });
 
     const phones = users
-      .map(u => u.whatsapp || u.phone)
+      .map(u => u.phone)
       .filter(Boolean) as string[];
 
     if (phones.length === 0) {
@@ -77,7 +77,7 @@ export class NotificationsWhatsAppService {
         this.provider.sendTemplate(
           templateName,
           variables,
-          { to: '', message }, // to será preenchido no sendToUser
+          { to: '', message },
         ),
       ),
     );

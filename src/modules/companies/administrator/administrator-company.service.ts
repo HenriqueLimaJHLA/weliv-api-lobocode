@@ -9,8 +9,6 @@ import {
   createEntityConfig,
 } from 'src/shared/universal';
 import { ForbiddenError, ConflictError, NotFoundError } from 'src/shared/common/errors';
-import { NotificationHelper } from 'src/modules/infrastructure/notifications/notification.helper';
-import { ENTITY_TYPES } from 'src/modules/infrastructure/notifications/shared/notification.types';
 import { CreateCompanyDto, CompanyStatus } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
@@ -30,8 +28,7 @@ export class AdministratorCompanyService extends UniversalService<
     queryService: UniversalQueryService,
     permissionService: UniversalPermissionService,
     metricsService: UniversalMetricsService,
-    @Optional() @Inject(REQUEST) private readonly request: any,
-    private readonly notificationHelper: NotificationHelper,
+    @Optional() @Inject(REQUEST) protected readonly request: any,
   ) {
     const { model, casl } = AdministratorCompanyService.entityConfig;
     super(
@@ -157,24 +154,8 @@ export class AdministratorCompanyService extends UniversalService<
   }
 
   protected async depoisDeCriar(entity: any): Promise<void> {
-    try {
-      const user = this.obterUsuarioLogado();
-      if (!user?.id) return;
-
-      await this.notificationHelper.criar({
-        title: `Empresa criada: ${entity.name}`,
-        message: `A empresa "${entity.name}" foi criada com sucesso.`,
-        userId: user.id,
-        companyId: entity.id,
-        entityType: ENTITY_TYPES.SYSTEM,
-        entityId: entity.id,
-        priority: 'NORMAL',
-        recipients: [user.id],
-        allowSelfNotification: true,
-      });
-    } catch (err) {
-      console.error('Erro ao criar notificação pós-criação de company:', err);
-    }
+    // TODO: Implementar notificação usando NotificationsModule
+    // Por enquanto, não faz nada
   }
 
   protected async antesDeAtualizar(id: string, data: UpdateCompanyDto): Promise<void> {

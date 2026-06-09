@@ -8,14 +8,14 @@ import {
   NotificationChannel,
   NotificationActionType,
   ChannelStatus,
-} from './common/enums/notification.enums';
+} from '../common/enums/notification.enums';
 import {
   CreateNotificationDto,
   SendNotificationToUsersDto,
   SendNotificationToAllDto,
   UpdateNotificationDto,
-} from './common/dto/notification.dto';
-import { NotificationResult } from './common/interfaces/notification-provider.interface';
+} from '../common/dto/notification.dto';
+import { NotificationResult } from '../common/interfaces/notification-provider.interface';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SERVICE - Notifications

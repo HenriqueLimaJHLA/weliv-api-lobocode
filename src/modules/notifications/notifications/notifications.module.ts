@@ -4,7 +4,7 @@ import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MODULE - Notifications
+// MODULE - Notifications Core
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Module({
@@ -13,7 +13,7 @@ import { NotificationsController } from './notifications.controller';
   providers: [NotificationsService],
   exports: [NotificationsService],
 })
-export class NotificationsModule {}
+export class NotificationsCoreModule {}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // EXPORTS

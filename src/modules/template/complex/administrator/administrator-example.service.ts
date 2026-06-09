@@ -13,8 +13,6 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from 'src/shared/common/errors';
-import { NotificationHelper } from 'src/modules/infrastructure/notifications/notification.helper';
-import { ENTITY_TYPES } from 'src/modules/infrastructure/notifications/shared/notification.types';
 import { AdministratorExampleContextService } from './services/administrator-example-context.service';
 import {
   AdministratorExampleQueryService,
@@ -41,10 +39,9 @@ export class AdministratorExampleService extends UniversalService<
     queryService: UniversalQueryService,
     permissionService: UniversalPermissionService,
     metricsService: UniversalMetricsService,
-    @Optional() @Inject(REQUEST) request: any,
+    @Optional() @Inject(REQUEST) protected readonly request: any,
     private readonly administratorExampleContext: AdministratorExampleContextService,
     private readonly administratorExampleQuery: AdministratorExampleQueryService,
-    private readonly notificationHelper: NotificationHelper,
   ) {
     const { model, casl } = AdministratorExampleService.entityConfig;
     super(
@@ -96,23 +93,7 @@ export class AdministratorExampleService extends UniversalService<
   }
 
   protected async depoisDeCriar(entity: any): Promise<void> {
-    try {
-      const user = this.obterUsuarioLogado();
-      if (!user?.id) return;
-      await this.notificationHelper.criar({
-        title: `Exemplo criado: ${entity.name}`,
-        message: `O registro "${entity.name}" foi criado pelo painel admin.`,
-        userId: user.id,
-        companyId: entity.companyId,
-        entityType: ENTITY_TYPES.SYSTEM,
-        entityId: entity.id,
-        priority: 'NORMAL',
-        recipients: [user.id],
-        allowSelfNotification: true,
-      });
-    } catch (err) {
-      console.error('Erro ao criar notificação pós-criação de example:', err);
-    }
+    // TODO: Implementar notificação
   }
 
   protected async antesDeAtualizar(
