@@ -35,4 +35,4 @@ echo "   Swagger: http://localhost:${PORT:-3000}/docs"
 echo "   Health:  http://localhost:${PORT:-3000}/health"
 echo ""
 
-npm run start:dev
+npm run dev
