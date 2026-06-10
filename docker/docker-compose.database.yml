@@ -1,12 +1,10 @@
-# Postgres + Redis + MinIO — todos os nomes e portas vêm do .env (ver .env.example).
+# Postgres + Redis + MinIO — todas as variáveis do .env
 name: ${COMPOSE_DATABASE_PROJECT_NAME}
 
 services:
   db:
     image: postgres:16.8-alpine3.20
     container_name: ${DB_CONTAINER_NAME}
-    env_file:
-      - ../.env
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
@@ -45,8 +43,6 @@ services:
   minio:
     image: minio/minio:latest
     container_name: ${MINIO_CONTAINER_NAME}
-    env_file:
-      - ../.env
     ports:
       - "${MINIO_API_HOST_PORT}:9000"
       - "${MINIO_CONSOLE_HOST_PORT}:9001"

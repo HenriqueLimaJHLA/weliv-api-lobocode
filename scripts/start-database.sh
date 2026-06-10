@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# Postgres + Redis + MinIO (docker/docker-compose.database.yml). Variáveis só no .env.
+# Postgres + Redis + MinIO (docker/docker-compose.database.yml)
+# As variáveis são lidas do .env na raiz do projeto.
 
 ENV_FILE="${ENV_FILE:-.env}"
 if [ -f "${ENV_FILE}" ]; then
