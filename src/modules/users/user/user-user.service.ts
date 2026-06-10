@@ -11,20 +11,23 @@ import {
 import { ForbiddenError, NotFoundError } from 'src/shared/common/errors';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
+// Placeholder DTO para criação (não usado no user layer)
+export class CreateUserDto {}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // SERVICE - USER LAYER (próprio usuário)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Injectable({ scope: Scope.REQUEST })
-export class UserUserService extends UniversalService<any, any> {
+export class UserUserService extends UniversalService<UpdateProfileDto, UpdateProfileDto> {
   private static readonly entityConfig = createEntityConfig('user');
 
   constructor(
-    private readonly repository: UniversalRepository<any, any>,
-    private readonly queryService: UniversalQueryService,
-    private readonly permissionService: UniversalPermissionService,
-    private readonly metricsService: UniversalMetricsService,
-    @Optional() @Inject(REQUEST) private readonly request: any,
+    repository: UniversalRepository<UpdateProfileDto, UpdateProfileDto>,
+    queryService: UniversalQueryService,
+    permissionService: UniversalPermissionService,
+    metricsService: UniversalMetricsService,
+    @Optional() @Inject(REQUEST) request: any,
   ) {
     const { model, casl } = UserUserService.entityConfig;
     super(

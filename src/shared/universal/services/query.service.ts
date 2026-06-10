@@ -92,11 +92,7 @@ export class UniversalQueryService {
     entityName: EntityNameCasl,
     companyId: string,
   ): void {
-    // Favorite.companyId é a empresa do prestador favoritado (denormalizado), não o tenant do request.
-    // Filtrar pelo tenant aqui esvazia a lista para tutores/prestadores que favoritam outras empresas.
-    if (entityName === 'Favorite') {
-      return;
-    }
+    // Company não precisa de filtro de companyId
     if (entityName === 'Company') {
       return;
     }

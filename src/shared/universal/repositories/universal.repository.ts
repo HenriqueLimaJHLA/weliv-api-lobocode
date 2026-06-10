@@ -101,7 +101,7 @@ export class UniversalRepository<DtoCreate, DtoUpdate> {
    * Não injetar company no create para essas entidades.
    */
   private static readonly ENTIDADES_SEM_RELACAO_COMPANY: EntityNameModel[] = [
-    'reminder',
+    
     'company',
   ];
 

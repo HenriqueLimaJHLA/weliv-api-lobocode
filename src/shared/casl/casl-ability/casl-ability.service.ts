@@ -3,29 +3,7 @@ import { AbilityBuilder, PureAbility } from '@casl/ability';
 import { createPrismaAbility, PrismaQuery, Subjects } from '@casl/prisma';
 import { PROJECT_CORE_CASL_ROLE_PERMISSIONS } from '../../config/casl-role-permissions.core.config';
 import { PROJECT_CASL_ROLE_PERMISSIONS } from '../../config/casl-role-permissions.config';
-import {
-  User,
-  Service,
-  Reminder,
-  Review,
-  Favorite,
-  Company,
-  File,
-  Notification,
-  Booking,
-  Payment,
-  Payout,
-  Coupon,
-  Ticket,
-  TicketReply,
-  Incident,
-  IncidentUpdate,
-  Webhook,
-  WebhookLog,
-  Availability,
-  AvailabilityException,
-  KycDocument,
-} from '@prisma/client';
+import { User, Company, File, Notification, Setting } from '@prisma/client';
 
 export type PermActions =
   | 'manage'
@@ -40,25 +18,9 @@ export type PermissionResource =
   | Subjects<{
       User: User;
       Company: Company;
-      Reminder: Reminder;
-      Service: Service;
-      Review: Review;
-      Favorite: Favorite;
       File: File;
       Notification: Notification;
-      Booking: Booking;
-      Payment: Payment;
-      Payout: Payout;
-      Coupon: Coupon;
-      Ticket: Ticket;
-      TicketReply: TicketReply;
-      Incident: Incident;
-      IncidentUpdate: IncidentUpdate;
-      Webhook: Webhook;
-      WebhookLog: WebhookLog;
-      Availability: Availability;
-      AvailabilityException: AvailabilityException;
-      KycDocument: KycDocument;
+      Setting: Setting;
     }>
   | 'all';
 

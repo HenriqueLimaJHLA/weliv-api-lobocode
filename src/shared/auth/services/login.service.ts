@@ -16,7 +16,7 @@ import { Request } from 'express';
 import { Roles } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UnauthorizedError } from '../../common/errors';
+import { UnauthorizedError, ConflictError } from '../../common/errors';
 
 @Injectable()
 export class LoginService {
@@ -117,7 +117,12 @@ export class LoginService {
   ): Promise<IRegisterResponse> {
     try {
       // Validar se email já existe
-      await this.userValidator.validarSeEmailEhUnico(registerDto.email);
+      const emailExists = await this.prisma.user.findUnique({
+        where: { email: registerDto.email.toLowerCase() },
+      });
+      if (emailExists) {
+        throw new ConflictError('Email já cadastrado');
+      }
 
       // Hash da senha
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -133,7 +138,7 @@ export class LoginService {
       };
 
       // Criar usuário no banco
-      const user = await this.userRepository.criar(userData);
+      const user = await this.prisma.user.create({ data: userData as any });
 
       // Log de sucesso do registro
       if (request) {
@@ -178,7 +183,12 @@ export class LoginService {
     request?: Request,
   ): Promise<IAuthResponse> {
     // Validar se email já existe
-    await this.userValidator.validarSeEmailEhUnico(registerDto.email);
+    const emailExists = await this.prisma.user.findUnique({
+      where: { email: registerDto.email.toLowerCase() },
+    });
+    if (emailExists) {
+      throw new ConflictError('Email já cadastrado');
+    }
 
     const email = registerDto.email.trim().toLowerCase();
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -189,7 +199,7 @@ export class LoginService {
           name: registerDto.businessName.trim(),
           contactEmail: email,
           contactPhone: registerDto.phone || null,
-          cnpj: registerDto.cnpj?.replace(/\D/g, '') || null, // Remove formatação (pode ser CNPJ ou CPF)
+          cnpj: registerDto.cnpj?.replace(/\D/g, '') || null,
           website: registerDto.website?.trim() || null,
           address: registerDto.address?.trim() || null,
           addressNumber: registerDto.addressNumber?.trim() || null,

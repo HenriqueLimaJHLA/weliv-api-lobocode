@@ -169,7 +169,6 @@ export class AdministratorSettingService extends UniversalService<
       key: normalizedKey,
       value,
       description,
-      companyId,
     });
 
     return { data: this.transformData(created) };

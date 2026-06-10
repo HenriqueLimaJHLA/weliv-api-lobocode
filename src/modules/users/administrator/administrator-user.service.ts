@@ -243,7 +243,7 @@ export class AdministratorUserService extends UniversalService<
     const updated = await this.repository.atualizar(
       this.entityName,
       { id },
-      { loginAttempts: 0, lockedUntil: null },
+      { status: UserStatus.ACTIVE },
     );
     return { data: this.transformData(updated) };
   }
@@ -261,7 +261,7 @@ export class AdministratorUserService extends UniversalService<
       throw new NotFoundError(this.entityName, id, 'id');
     }
 
-    const updated = await this.repository.atualizar(this.entityName, { id }, { role });
+    const updated = await this.repository.atualizar(this.entityName, { id }, { role: role as UserRole });
     return { data: this.transformData(updated) };
   }
 
