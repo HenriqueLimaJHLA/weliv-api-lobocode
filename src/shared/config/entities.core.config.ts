@@ -3,6 +3,11 @@ export const PROJECT_CORE_ENTITY_MAPPING = {
   company: 'Company',
   file: 'File',
   notification: 'Notification',
+  specialty: 'Specialty',
+  service: 'Service',
+  professional: 'Professional',
+  patient: 'Patient',
+  appointment: 'Appointment',
 } as const;
 
 export const PROJECT_CORE_CASL_TO_MODEL_MAPPING = {
@@ -10,4 +15,9 @@ export const PROJECT_CORE_CASL_TO_MODEL_MAPPING = {
   Company: 'company',
   File: 'file',
   Notification: 'notification',
+  Specialty: 'specialty',
+  Service: 'service',
+  Professional: 'professional',
+  Patient: 'patient',
+  Appointment: 'appointment',
 } as const;

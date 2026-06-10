@@ -1,0 +1,57 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// Specialty - Especialidades Clínicas
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Catálogo de especialidades (Cardiologia, Dermatologia, etc.)
+// companyId null = especialidade da plataforma (disponível para todos)
+// companyId preenchido = especialidade específica da clínica
+
+enum CatalogItemStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Specialty {
+  id          String            @id @default(cuid())
+  name        String
+  description String?           @db.Text
+  status      CatalogItemStatus @default(ACTIVE)
+
+  // Visual
+  icon        String?          // Ícone para UI
+  color       String?           // Cor para representação visual
+
+  // Categoria para agrupamento (ex: "Clínica Geral", "Especialidades")
+  category    String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Se null, é especialidade da plataforma
+  companyId   String?
+  company     Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Profissionais com esta especialidade
+  professionals Professional[]
+
+  // Serviços vinculados a esta especialidade
+  services      Service[]
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([companyId])
+  @@index([status])
+  @@index([name])
+  @@index([category])
+  @@index([deletedAt])
+
+  @@map("specialties")
+}

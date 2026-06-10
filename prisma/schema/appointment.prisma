@@ -1,144 +1,161 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// Company - Entidade Raiz de Multi-Tenancy
+// ProfessionalBlockedTime - Bloqueios de Agenda
 // ═══════════════════════════════════════════════════════════════════════════════
+//
+// Períodos em que o profissional não estará disponível para agendamentos.
+// Ex: férias, licença médica, reuniões, etc.
 
-enum CompanyStatus {
-  PENDING
-  APPROVED
-  ACTIVE
-  TRIAL
-  SUSPENDED
-  BLOCKED
-  CANCELLED
-}
-
-model Company {
-  // ═══════════════════════════════════════════════════════════════════════════
-  // IDENTIFICAÇÃO
-  // ═══════════════════════════════════════════════════════════════════════════
-  id                       String        @id @default(cuid())
-  name                     String
-  tradeName                String?       @db.VarChar(100)
-  legalName                String?       @db.VarChar(150)
-  cnpj                     String?       @unique
-  stateRegistration        String?
-  municipalRegistration    String?
+model ProfessionalBlockedTime {
+  id         String   @id @default(cuid())
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CONTATO
+  // RELACIONAMENTO
   // ═══════════════════════════════════════════════════════════════════════════
-  contactEmail             String?
-  billingEmail             String?
-  commercialEmail          String?
-  contactPhone             String?
-  whatsapp                 String?
+  professionalId String
+  professional  Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ENDEREÇO
+  // DADOS DO BLOQUEIO
   // ═══════════════════════════════════════════════════════════════════════════
-  address                  String?
-  addressNumber            String?
-  addressComplement        String?
-  neighborhood             String?
-  city                     String?
-  state                    String?       @db.VarChar(2)
-  country                  String?       @default("Brasil")
-  zipCode                  String?
-  latitude                 Float?
-  longitude                Float?
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CONFIGURAÇÕES
-  // ═══════════════════════════════════════════════════════════════════════════
-  status                   CompanyStatus @default(PENDING)
-  timezone                 String?       @default("America/Sao_Paulo")
-  logo                     String?
-  secondaryLogo            String?
-  favicon                  String?
-  primaryColor             String?
-  secondaryColor           String?
-  theme                    String?
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // DADOS DA EMPRESA
-  // ═══════════════════════════════════════════════════════════════════════════
-  website                  String?
-  segment                  String?
-  companySize              String?
-  foundedAt                DateTime?
-  employeeCount            Int?
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // DADOS BANCÁRIOS / PAGAMENTO
-  // ═══════════════════════════════════════════════════════════════════════════
-  payoutPixKey             String?
-  payoutPixKeyType         String?
-  payoutBankCode           String?
-  payoutBankAgency         String?
-  payoutBankAccount        String?
-  payoutBankAccountDigit   String?
-  payoutBankOwnerName      String?
-  payoutBankCpfCnpj        String?
-  payoutBankAccountType    String?
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CONFIGURAÇÕES EXTRAS (JSON)
-  // ═══════════════════════════════════════════════════════════════════════════
-  openingHours             Json?
-  businessDays             Json?
-  defaultSla               Int?
-  settings                 Json?
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CONFIGURAÇÕES DEFAULT PARA PROFISSIONAIS
-  // Usados quando profissional não define valor próprio
-  // ═══════════════════════════════════════════════════════════════════════════
-  defaultConsultationPrice  Decimal?  @db.Decimal(10, 2)
-  defaultAcceptsInsurance   Boolean   @default(false)
-  defaultInsurances         Json?     // string[] - convênios aceitos
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CONFIGURAÇÕES DE AGENDAMENTO DA CLÍNICA
-  // Definições globais que se aplicam a todos os profissionais
-  // ═══════════════════════════════════════════════════════════════════════════
-  appointmentSettings      Json?     // {
-  //   remarcationEnabled: boolean,
-  //   remarcationLimit: number,
-  //   waitingListEnabled: boolean,
-  //   depositPercentage: number
-  // }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RELACIONAMENTOS
-  // ═══════════════════════════════════════════════════════════════════════════
-  users                    User[]
-  professionals           Professional[]
-  patients                Patient[]
-  specialties              Specialty[]
-  services                 Service[]
-  appointments            Appointment[]
-  files                    File[]
-  notifications            Notification[]
-  notificationTemplates    NotificationTemplate[]
-  userNotificationPrefs    UserNotificationPreference[]
-  deviceTokens             DeviceToken[]
-  settingConfigs           Setting[]
+  blockedDate DateTime @db.Date
+  startTime   String   // HH:MM
+  endTime     String   // HH:MM
+  reason      String
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AUDITORIA
   // ═══════════════════════════════════════════════════════════════════════════
-  createdAt                DateTime      @default(now())
-  updatedAt                DateTime      @updatedAt
-  deletedAt                DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ÍNDICES
   // ═══════════════════════════════════════════════════════════════════════════
-  @@index([cnpj])
-  @@index([deletedAt])
-  @@index([status])
-  @@index([city])
-  @@index([state])
+  @@index([professionalId])
+  @@index([blockedDate])
+  @@index([professionalId, blockedDate])
 
-  @@map("companies")
+  @@map("professional_blocked_times")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ScheduleReminder - Lembretes da Agenda
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Lembretes criados pelo profissional para a sua agenda.
+// Ex: "Ligar para paciente X", "Preparar material Y"
+
+model ScheduleReminder {
+  id         String   @id @default(cuid())
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTO
+  // ═══════════════════════════════════════════════════════════════════════════
+  professionalId String
+  professional  Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DADOS DO LEMBRETE
+  // ═══════════════════════════════════════════════════════════════════════════
+  title     String
+  remindAt  DateTime
+  note      String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt DateTime @default(now())
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([professionalId])
+  @@index([remindAt])
+
+  @@map("schedule_reminders")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Appointment - Agendamento
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Consulta/agendamento entre um paciente e um profissional.
+
+enum AppointmentType {
+  PRESENCIAL
+  TELEMEDICINA
+  WHATSAPP
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Appointment {
+  id String @id @default(cuid())
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IDENTIFICAÇÃO
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Identificador externo (para integração com outros sistemas)
+  externalId  String?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  companyId    String
+  company      Company     @relation(fields: [companyId], references: [id])
+
+  // Profissional responsável
+  professionalId String
+  professional   Professional @relation("ProfessionalAppointments", fields: [professionalId], references: [id])
+
+  // Paciente
+  patientId   String
+  patient     Patient     @relation(fields: [patientId], references: [id])
+
+  // Serviço realizado (opcional)
+  serviceId   String?
+  service     Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DADOS DO AGENDAMENTO
+  // ═══════════════════════════════════════════════════════════════════════════
+  startsAt     DateTime
+  endsAt       DateTime?
+  type         AppointmentType @default(PRESENCIAL)
+  status       AppointmentStatus @default(SCHEDULED)
+
+  // Informações de pagamento
+  depositPaid    Boolean  @default(false)
+  depositAmount   Decimal? @db.Decimal(10, 2)
+
+  // Observações
+  notes     String? @db.Text
+  reason    String? // Motivo da consulta
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([companyId])
+  @@index([professionalId])
+  @@index([patientId])
+  @@index([startsAt])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([professionalId, startsAt])
+  @@index([patientId, startsAt])
+
+  @@map("appointments")
 }

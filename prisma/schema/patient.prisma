@@ -1,110 +1,66 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// User - Usuários do Sistema (Entidade de Identidade)
+// Patient - Perfil de Paciente do Usuário
 // ═══════════════════════════════════════════════════════════════════════════════
 //
-// NOTA: Este é o User de IDENTIDADE e AUTENTICAÇÃO.
-// Dados de profissional vão para Professional (1:1).
-// Dados de paciente vão para Patient (1:1).
-// NÃO adicione campos de negócio aqui!
+// Relacionamento 1:1 com User.
+// Armazena dados específicos de paciente (não de autenticação).
 
-enum Roles {
-  USER
-  ADMIN
-  SYSTEM_ADMIN
-}
-
-enum UserStatus {
+enum PatientCareStatus {
   ACTIVE
   INACTIVE
-  SUSPENDED
-  PENDING
-  BLOCKED
+  NEEDS_ATTENTION
 }
 
-model User {
-  // ═══════════════════════════════════════════════════════════════════════════
-  // IDENTIFICAÇÃO BÁSICA
-  // ═══════════════════════════════════════════════════════════════════════════
-  id        String     @id @default(cuid())
-  name      String
-  email     String     @unique
-  login     String?    @unique  // Pode ser igual ao email ou diferente
-  password  String
-  role      Roles      @default(USER)
-  status    UserStatus @default(PENDING)
+model Patient {
+  id         String            @id @default(cuid())
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // DADOS PESSOAIS BÁSICOS
+  // RELACIONAMENTOS OBRIGATÓRIOS
   // ═══════════════════════════════════════════════════════════════════════════
-  phone       String?
-  cpf         String?    @unique
-  birthDate   DateTime?  @db.Date
-  gender      String?
-  nationality String?    @default("Brasileira")
+  // User é a identidade (email, password, etc)
+  userId     String            @unique
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Company é a clínica onde é paciente
+  companyId  String
+  company    Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ENDEREÇO
+  // DADOS CLÍNICOS BÁSICOS
   // ═══════════════════════════════════════════════════════════════════════════
-  address             String?
-  addressNumber       String?
-  addressComplement   String?
-  neighborhood        String?
-  city                String?
-  state               String?  @db.VarChar(2)
-  country             String?  @default("Brasil")
-  zipCode             String?
-  latitude            Float?
-  longitude           Float?
+  healthPlan       String?
+  careStatus       PatientCareStatus @default(ACTIVE)
+
+  // Dados de saúde (prontuário resumido)
+  bloodType          String?
+  allergies          Json?  // string[]
+  chronicConditions  Json?  // string[]
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CONFIGURAÇÕES DE PREFERÊNCIA
+  // RESPONSÁVEL (para menores ou pacientes que precisam de acompanhante)
   // ═══════════════════════════════════════════════════════════════════════════
-  preferences           Json?
-  notificationSettings  Json?
-  language              String?  @default("pt-BR")
-  timezone              String?  @default("America/Sao_Paulo")
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // AUTENTICAÇÃO E SEGURANÇA
-  // ═══════════════════════════════════════════════════════════════════════════
-  emailVerified    Boolean    @default(false)
-  phoneVerified    Boolean    @default(false)
-  twoFactorEnabled Boolean    @default(false)
-  twoFactorSecret  String?
-  lastLoginAt      DateTime?
-  loginAttempts    Int        @default(0)
-  lockedUntil      DateTime?
-  resetToken       String?
-  resetTokenExp    DateTime?
+  guardianName       String?
+  guardianPhone      String?
+  guardianDocument   String?
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RELACIONAMENTOS
   // ═══════════════════════════════════════════════════════════════════════════
-  company   Company? @relation(fields: [companyId], references: [id])
-  companyId String?
-
-  // Relacionamentos 1:1 para perfis específicos
-  professional Professional?
-  patient      Patient?
+  appointments       Appointment[]
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AUDITORIA
   // ═══════════════════════════════════════════════════════════════════════════
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ÍNDICES
   // ═══════════════════════════════════════════════════════════════════════════
-  @@index([email])
-  @@index([login])
-  @@index([cpf])
-  @@index([phone])
-  @@index([status])
-  @@index([role])
   @@index([companyId])
+  @@index([careStatus])
   @@index([deletedAt])
 
-  @@map("users")
+  @@map("patients")
 }

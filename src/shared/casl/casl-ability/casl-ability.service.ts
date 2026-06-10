@@ -3,24 +3,14 @@ import { AbilityBuilder, PureAbility } from '@casl/ability';
 import { createPrismaAbility, PrismaQuery, Subjects } from '@casl/prisma';
 import { PROJECT_CORE_CASL_ROLE_PERMISSIONS } from '../../config/casl-role-permissions.core.config';
 import { PROJECT_CASL_ROLE_PERMISSIONS } from '../../config/casl-role-permissions.config';
-import { User, Company, File, Notification, Setting } from '@prisma/client';
+import { User, Company, File, Notification, Setting, Specialty, Service, Professional, Patient, Appointment } from '@prisma/client';
 
-export type PermActions =
-  | 'manage'
-  | 'create'
-  | 'read'
-  | 'update'
-  | 'delete'
-  | 'approve'
-  | 'export';
+export type PermActions = 'manage' | 'create' | 'read' | 'update' | 'delete' | 'approve' | 'export';
 
 export type PermissionResource =
   | Subjects<{
-      User: User;
-      Company: Company;
-      File: File;
-      Notification: Notification;
-      Setting: Setting;
+      User: User; Company: Company; File: File; Notification: Notification; Setting: Setting;
+      Specialty: Specialty; Service: Service; Professional: Professional; Patient: Patient; Appointment: Appointment;
     }>
   | 'all';
 

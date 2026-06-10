@@ -1,0 +1,55 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// Service - Serviços e Procedimentos
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Catálogo de serviços/procedimentos oferecidos pela clínica
+// Ex: "Consulta Cardiológica", "Eletrocardiograma", "Aferição de Pressão"
+
+model Service {
+  id          String            @id @default(cuid())
+  name        String
+  description String?           @db.Text
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURAÇÕES DO SERVIÇO
+  // ═══════════════════════════════════════════════════════════════════════════
+  duration    Int?              // Duração em minutos (ex: 30, 60)
+  price       Decimal?          @db.Decimal(10, 2)
+  status      CatalogItemStatus @default(ACTIVE)
+
+  // Ordem de exibição (opcional)
+  order       Int?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELACIONAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Especialidade a qual pertence (opcional)
+  specialtyId String?
+  specialty   Specialty?       @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
+
+  // Clínica dona do serviço
+  companyId   String?
+  company     Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Agendamentos que usam este serviço
+  appointments Appointment[]
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDITORIA
+  // ═══════════════════════════════════════════════════════════════════════════
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÍNDICES
+  // ═══════════════════════════════════════════════════════════════════════════
+  @@index([companyId])
+  @@index([specialtyId])
+  @@index([status])
+  @@index([name])
+  @@index([order])
+  @@index([deletedAt])
+
+  @@map("services")
+}
